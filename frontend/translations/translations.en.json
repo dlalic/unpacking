@@ -1,0 +1,60 @@
+{
+  "buttons": {
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "edit": "Edit",
+    "new_snippet": "New snippet",
+    "new_term": "New term",
+    "new_user": "New user",
+    "sign_in": "Sign in",
+    "sign_out": "Sign out",
+    "submit": "Submit",
+    "view": "View"
+  },
+  "titles": {
+    "home": "Homepage",
+    "name": "Unpacking",
+    "snippets": "Snippets",
+    "terms": "Terms",
+    "users": "Users"
+  },
+  "dialogs": {
+    "confirm_title": "Are you sure?"
+  },
+  "forms": {
+    "authors": "Authors",
+    "edit": "Edit {{sth}}",
+    "email": "Email",
+    "link": "Link",
+    "media": "Media",
+    "media_blog": "Blog",
+    "media_book": "Book",
+    "media_news": "News",
+    "media_twitter": "Twitter",
+    "media_video": "Video",
+    "media_website": "Website",
+    "name": "Name",
+    "on_email_empty": "Please enter an email.",
+    "on_length_less_than": "Must be at least {{n}} characters.",
+    "on_name_empty": "Please enter a name.",
+    "on_password_empty": "Please enter a password.",
+    "on_snippet_empty": "Please enter a snippet.",
+    "password": "Password",
+    "role": "Role",
+    "role_admin": "Admin",
+    "role_user": "User",
+    "related": "Related",
+    "text": "Text",
+    "terms": "Terms"
+  },
+  "labels": {
+    "hello": "Hello, {{user}}!",
+    "loading": "Loading...",
+    "no_snippets": "No snippets",
+    "no_terms": "No terms",
+    "no_users": "No users",
+    "on_error": "Error: {{reason}}",
+    "on_sign_out": "Signed out successfully!"
+  }
+}
