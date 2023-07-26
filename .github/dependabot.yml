@@ -6,3 +6,21 @@ updates:
       interval: weekly
       time: "04:00"
     open-pull-requests-limit: 10
+  - package-ecosystem: npm
+    schedule:
+      interval: weekly
+      time: "04:00"
+    open-pull-requests-limit: 10
+    directory: "/frontend"
+  - package-ecosystem: elm
+    schedule:
+      interval: weekly
+      time: "04:00"
+    open-pull-requests-limit: 10
+    directory: "/frontend"
+  - package-ecosystem: elm
+    schedule:
+      interval: weekly
+      time: "04:00"
+    open-pull-requests-limit: 10
+    directory: "/frontend/review"
