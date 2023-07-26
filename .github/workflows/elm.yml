@@ -31,6 +31,18 @@ jobs:
           yarn gen
           yarn check_lint
 
+  check-i18n:
+    name: i18n
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: |
+          yarn install
+          yarn gen
+          yarn i18n
+          git diff --exit-code
+          yarn check_i18n
+
   build:
     name: Build
     runs-on: ubuntu-latest
