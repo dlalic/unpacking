@@ -4,11 +4,11 @@ use crate::schema::{authors, authors_snippets, snippets, terms, terms_snippets};
 use std::collections::HashMap;
 
 use crate::models::enums::Media;
-use diesel::{ExpressionMethods, PgConnection, QueryDsl, RunQueryDsl};
+use diesel::{Connection, ExpressionMethods, PgConnection, QueryDsl, RunQueryDsl};
 use uuid::Uuid;
 
 pub fn delete(id: Uuid, conn: &mut PgConnection) -> Result<usize, Error> {
-    conn.build_transaction().read_write().run(|conn| {
+    conn.transaction::<_, Error, _>(|conn| {
         diesel::delete(authors_snippets::dsl::authors_snippets)
             .filter(authors_snippets::dsl::snippet_id.eq(id))
             .execute(conn)
@@ -30,7 +30,7 @@ pub fn insert(
     new_authors: Vec<String>,
     conn: &mut PgConnection,
 ) -> Result<Uuid, Error> {
-    conn.build_transaction().read_write().run(|conn| {
+    conn.transaction::<_, Error, _>(|conn| {
         let id = diesel::insert_into(snippets::dsl::snippets)
             .values(snippet)
             .returning(snippets::dsl::id)
@@ -146,7 +146,7 @@ pub fn update(
     new_authors: Vec<String>,
     conn: &mut PgConnection,
 ) -> Result<(), Error> {
-    conn.build_transaction().read_write().run(|conn| {
+    conn.transaction::<_, Error, _>(|conn| {
         diesel::update(snippets::dsl::snippets.find(id))
             .set((
                 snippets::dsl::text.eq(text),
