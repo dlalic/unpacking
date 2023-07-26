@@ -3,11 +3,11 @@ use crate::models::{Term, TermRelated};
 use crate::schema::{terms, terms_related};
 use std::collections::HashMap;
 
-use diesel::{ExpressionMethods, PgConnection, QueryDsl, RunQueryDsl};
+use diesel::{Connection, ExpressionMethods, PgConnection, QueryDsl, RunQueryDsl};
 use uuid::Uuid;
 
 pub fn delete(id: Uuid, conn: &mut PgConnection) -> Result<usize, Error> {
-    conn.build_transaction().read_write().run(|conn| {
+    conn.transaction::<_, Error, _>(|conn| {
         diesel::delete(terms_related::dsl::terms_related)
             .filter(terms_related::dsl::term_id.eq(id))
             .execute(conn)
@@ -19,7 +19,7 @@ pub fn delete(id: Uuid, conn: &mut PgConnection) -> Result<usize, Error> {
 }
 
 pub fn insert(term: Term, related: Vec<Uuid>, conn: &mut PgConnection) -> Result<Uuid, Error> {
-    conn.build_transaction().read_write().run(|conn| {
+    conn.transaction::<_, Error, _>(|conn| {
         let id = diesel::insert_into(terms::dsl::terms)
             .values(term)
             .returning(terms::dsl::id)
@@ -56,7 +56,7 @@ pub fn update(
     related: Vec<Uuid>,
     conn: &mut PgConnection,
 ) -> Result<(), Error> {
-    conn.build_transaction().read_write().run(|conn| {
+    conn.transaction::<_, Error, _>(|conn| {
         diesel::update(terms::dsl::terms.find(id))
             .set(terms::dsl::name.eq(name))
             .execute(conn)

@@ -4,7 +4,9 @@ use crate::models::{enums::Role, Password, User};
 use crate::schema::{passwords, users};
 
 use crate::config::{admin_email, admin_password};
-use diesel::{BoolExpressionMethods, ExpressionMethods, PgConnection, QueryDsl, RunQueryDsl};
+use diesel::{
+    BoolExpressionMethods, Connection, ExpressionMethods, PgConnection, QueryDsl, RunQueryDsl,
+};
 use uuid::Uuid;
 
 pub fn create_admin_account_if_not_present(conn: &mut PgConnection) -> Result<(), Error> {
@@ -50,7 +52,7 @@ pub fn delete(id: Uuid, conn: &mut PgConnection) -> Result<usize, Error> {
 }
 
 pub fn insert(user: User, password: &str, conn: &mut PgConnection) -> Result<Uuid, Error> {
-    conn.build_transaction().read_write().run(|conn| {
+    conn.transaction::<_, Error, _>(|conn| {
         let uuid = diesel::insert_into(users::dsl::users)
             .values(user)
             .returning(users::dsl::id)
