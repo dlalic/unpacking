@@ -9,6 +9,7 @@
     "new_user": "New user",
     "sign_in": "Sign in",
     "sign_out": "Sign out",
+    "source": "Source",
     "submit": "Submit",
     "view": "View"
   },
@@ -16,6 +17,7 @@
     "home": "Homepage",
     "name": "Unpacking",
     "snippets": "Snippets",
+    "source_code": "Source code",
     "terms": "Terms",
     "users": "Users"
   },

@@ -2,15 +2,18 @@ module UI.Layout exposing (layout, scaled)
 
 import Api.Data exposing (Role(..))
 import Domain.Session exposing (Session)
-import Element exposing (Element, centerX, column, fill, height, padding, spacing, width)
+import Element exposing (Element, centerX, column, fill, height, padding, row, spacing, width)
+import Element.Border as Border
 import Element.Font as Font
 import Gen.Route as Route exposing (Route)
 import Html exposing (Html)
+import I18Next exposing (Translations)
 import Shared
 import Translations.Buttons exposing (signOut)
-import Translations.Titles exposing (home, name, snippets, terms, users)
+import Translations.Titles exposing (home, name, snippets, sourceCode, terms, users)
 import UI.Dimensions exposing (fillMaxViewWidth)
 import UI.Header exposing (HeaderButton, Home, header)
+import UI.Link exposing (footerLink)
 import UI.TabBar exposing (TabBar, tabBar)
 
 
@@ -22,6 +25,7 @@ layout route shared children =
         (column [ fillMaxViewWidth, height fill, centerX ]
             (List.append (headerAndTabs shared route)
                 [ column [ width fill, height fill, padding 20, spacing 20 ] children
+                , footer shared.translations
                 ]
             )
         )
@@ -69,3 +73,17 @@ tabs shared route session =
             , { title = terms shared.translations, selected = route == Route.Terms, route = Route.Terms }
             , { title = snippets shared.translations, selected = route == Route.Snippets, route = Route.Snippets }
             ]
+
+
+footer : Translations -> Element msg
+footer translations =
+    row
+        [ width fill
+        , padding 20
+        , spacing 20
+        , Border.widthEach { top = 1, bottom = 0, left = 0, right = 0 }
+        ]
+        [ footerLink (sourceCode translations) "https://github.com/dlalic/unpacking"
+        , footerLink "Redaction" "https://www.redaction.us/"
+        , footerLink "Public Sans" "https://github.com/uswds/public-sans"
+        ]
