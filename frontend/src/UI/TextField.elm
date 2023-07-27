@@ -7,6 +7,7 @@ import Element.Input as Input
 import Html.Events
 import Json.Decode as Decode
 import UI.ColorPalette exposing (black, red)
+import UI.Dimensions exposing (smallScreenWidth)
 import UI.Layout exposing (scaled)
 
 
@@ -80,9 +81,8 @@ multilineTextFieldStyle : TextField msg -> List (Attribute msg)
 multilineTextFieldStyle model =
     [ width
         (fill
-            |> maximum 300
-            -- TODO: determine by window length
-            |> minimum 300
+            |> maximum (smallScreenWidth // 2)
+            |> minimum (smallScreenWidth // 2)
         )
     , height (px 150)
     , Border.color (borderColor (List.length model.validation > 0))

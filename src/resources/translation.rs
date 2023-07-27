@@ -36,7 +36,7 @@ fn detect_language(header_value: &HeaderValue) -> String {
                         .map(|v| v.primary_language().to_string())
                 })
                 .collect::<Vec<_>>();
-            let common_languages = intersection(&raw_languages.join(","), supported);
+            let common_languages = intersection(&raw_languages.join(","), &supported);
             let first: Option<LanguageTag> = common_languages
                 .iter()
                 .find_map(|lang| lang.parse::<LanguageTag>().ok());

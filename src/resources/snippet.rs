@@ -130,13 +130,13 @@ fn read_all(
                 .get(snippet.id())
                 .into_iter()
                 .flatten()
-                .map(|v| SnippetTermResponse::from(v))
+                .map(SnippetTermResponse::from)
                 .collect();
             let authors = snippet_authors
                 .get(snippet.id())
                 .into_iter()
                 .flatten()
-                .map(|v| AuthorResponse::from(v))
+                .map(AuthorResponse::from)
                 .collect();
             SnippetResponse::from((snippet, terms, authors))
         })

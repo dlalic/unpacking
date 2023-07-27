@@ -243,10 +243,6 @@ viewSnippets shared model =
 
         Loaded snippets ->
             case ( model.session.role, model.toUpdate, model.toDelete ) of
-                ( RoleAdmin, Just toUpdate, _ ) ->
-                    -- TODO:
-                    [ editSnippet shared toUpdate model [] [] ]
-
                 ( RoleAdmin, _, Just _ ) ->
                     [ defaultDialog shared.translations ClickedCancelDelete ClickedSubmitDelete ]
 

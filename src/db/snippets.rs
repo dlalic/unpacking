@@ -136,6 +136,7 @@ pub fn select_authors(
     Ok(result)
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn update(
     id: Uuid,
     text: String,
