@@ -340,8 +340,23 @@ loadSnippets session =
 
 editSnippetFromSnippet : SnippetResponse -> EditSnippet
 editSnippetFromSnippet model =
+    let
+        cutOff : Int
+        cutOff =
+            32
+
+        title : String
+        title =
+            String.left cutOff model.text
+                ++ (if String.length model.text > cutOff then
+                        "..."
+
+                    else
+                        ""
+                   )
+    in
     { id = model.id
-    , title = model.text
+    , title = title
     , text = model.text
     , media = model.media
     , link = model.link
