@@ -52,6 +52,11 @@ signOut translations =
     t translations "buttons.sign_out"
 
 
+source : Translations -> String
+source translations =
+    t translations "buttons.source"
+
+
 submit : Translations -> String
 submit translations =
     t translations "buttons.submit"

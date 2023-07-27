@@ -22,6 +22,7 @@ pub struct Buttons {
     pub new_user: String,
     pub sign_in: String,
     pub sign_out: String,
+    pub source: String,
     pub submit: String,
     pub view: String,
 }
@@ -31,6 +32,7 @@ pub struct Titles {
     pub home: String,
     pub name: String,
     pub snippets: String,
+    pub source_code: String,
     pub terms: String,
     pub users: String,
 }

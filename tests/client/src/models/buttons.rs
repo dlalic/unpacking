@@ -31,6 +31,8 @@ pub struct Buttons {
     pub sign_in: String,
     #[serde(rename = "sign_out")]
     pub sign_out: String,
+    #[serde(rename = "source")]
+    pub source: String,
     #[serde(rename = "submit")]
     pub submit: String,
     #[serde(rename = "view")]
@@ -38,7 +40,7 @@ pub struct Buttons {
 }
 
 impl Buttons {
-    pub fn new(cancel: String, confirm: String, delete: String, edit: String, new_snippet: String, new_term: String, new_user: String, sign_in: String, sign_out: String, submit: String, view: String) -> Buttons {
+    pub fn new(cancel: String, confirm: String, delete: String, edit: String, new_snippet: String, new_term: String, new_user: String, sign_in: String, sign_out: String, source: String, submit: String, view: String) -> Buttons {
         Buttons {
             cancel,
             confirm,
@@ -49,6 +51,7 @@ impl Buttons {
             new_user,
             sign_in,
             sign_out,
+            source,
             submit,
             view,
         }

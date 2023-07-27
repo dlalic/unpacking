@@ -108,6 +108,7 @@ type alias Buttons =
     , newUser : String
     , signIn : String
     , signOut : String
+    , source : String
     , submit : String
     , view : String
     }
@@ -252,6 +253,7 @@ type alias Titles =
     { home : String
     , name : String
     , snippets : String
+    , sourceCode : String
     , terms : String
     , users : String
     }
@@ -351,6 +353,7 @@ encodeButtonsPairs model =
             , encode "new_user" Json.Encode.string model.newUser
             , encode "sign_in" Json.Encode.string model.signIn
             , encode "sign_out" Json.Encode.string model.signOut
+            , encode "source" Json.Encode.string model.source
             , encode "submit" Json.Encode.string model.submit
             , encode "view" Json.Encode.string model.view
             ]
@@ -685,6 +688,7 @@ encodeTitlesPairs model =
             [ encode "home" Json.Encode.string model.home
             , encode "name" Json.Encode.string model.name
             , encode "snippets" Json.Encode.string model.snippets
+            , encode "source_code" Json.Encode.string model.sourceCode
             , encode "terms" Json.Encode.string model.terms
             , encode "users" Json.Encode.string model.users
             ]
@@ -851,6 +855,7 @@ buttonsDecoder =
         |> decode "new_user" Json.Decode.string 
         |> decode "sign_in" Json.Decode.string 
         |> decode "sign_out" Json.Decode.string 
+        |> decode "source" Json.Decode.string 
         |> decode "submit" Json.Decode.string 
         |> decode "view" Json.Decode.string 
 
@@ -1021,6 +1026,7 @@ titlesDecoder =
         |> decode "home" Json.Decode.string 
         |> decode "name" Json.Decode.string 
         |> decode "snippets" Json.Decode.string 
+        |> decode "source_code" Json.Decode.string 
         |> decode "terms" Json.Decode.string 
         |> decode "users" Json.Decode.string 
 

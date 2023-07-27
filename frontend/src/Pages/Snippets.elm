@@ -6,7 +6,7 @@ import Api.Request.Default exposing (deleteSnippets, readAllAuthors, readAllSnip
 import Auth
 import Common exposing (uuidFromString)
 import Dict
-import Element exposing (Element, newTabLink, paragraph, text)
+import Element exposing (Element, paragraph, text)
 import Element.Font as Font
 import Forms.SnippetForm exposing (EditSnippet, editForm, editSnippetValidator, stringFromMedia)
 import Forms.Validators exposing (ValidationField)
@@ -19,16 +19,16 @@ import SearchBox exposing (ChangeEvent(..))
 import Set exposing (Set)
 import Shared
 import Storage exposing (Storage)
-import Translations.Buttons exposing (delete, edit, newSnippet)
+import Translations.Buttons exposing (delete, edit, newSnippet, source)
 import Translations.Forms as Forms
 import Translations.Labels exposing (loading, onError)
 import Translations.Titles exposing (snippets)
 import UI.Button exposing (defaultButton)
 import UI.Card exposing (keyedCard)
-import UI.ColorPalette exposing (green)
 import UI.Dialog exposing (defaultDialog)
 import UI.Dropdown exposing (Dropdown, dropdown, initModel, updateModel)
 import UI.Layout as Layout
+import UI.Link exposing (defaultLink)
 import Uuid exposing (Uuid)
 import Validate exposing (Valid, fromValid, validate)
 import View exposing (View)
@@ -275,7 +275,7 @@ viewSnippet shared canEdit snippet =
         link =
             case snippet.link of
                 Just a ->
-                    [ newTabLink [ Font.color green, Font.size 18, Font.bold ] { url = a, label = text "Source »" } ]
+                    [ defaultLink (source shared.translations) a ]
 
                 Nothing ->
                     []

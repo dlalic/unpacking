@@ -1,6 +1,6 @@
 module UI.Card exposing (Card, keyedCard, viewForm)
 
-import Element exposing (Attribute, Element, alignLeft, alignRight, column, el, fill, padding, paragraph, row, spacing, text, width)
+import Element exposing (Attribute, Element, alignLeft, alignRight, column, el, fill, height, padding, paragraph, row, spacing, text, width)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Events exposing (onClick)
@@ -56,7 +56,7 @@ rows model =
     in
     row style
         [ el [ alignLeft, Font.bold, width fill ] (paragraph [ width fill ] [ text model.title ])
-        , el [ alignRight, Font.color red ] (text model.rightLabel)
+        , el [ alignRight, Font.color red, height fill ] (text model.rightLabel)
         ]
         :: List.map (\v -> row style [ v ]) model.body
         ++ [ row [ spacing 16 ] model.buttons ]

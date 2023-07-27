@@ -22,6 +22,11 @@ snippets translations =
     t translations "titles.snippets"
 
 
+sourceCode : Translations -> String
+sourceCode translations =
+    t translations "titles.source_code"
+
+
 terms : Translations -> String
 terms translations =
     t translations "titles.terms"
