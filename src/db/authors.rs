@@ -11,10 +11,7 @@ pub fn delete(id: Uuid, conn: &mut PgConnection) -> Result<usize, Error> {
 }
 
 pub fn insert(names: Vec<String>, conn: &mut PgConnection) -> Result<Vec<Uuid>, Error> {
-    let authors = names
-        .into_iter()
-        .map(|name| Author::new(name))
-        .collect::<Vec<_>>();
+    let authors = names.into_iter().map(Author::new).collect::<Vec<_>>();
     let uuids = diesel::insert_into(authors::dsl::authors)
         .values(authors)
         .returning(authors::dsl::id)

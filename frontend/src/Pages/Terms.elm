@@ -69,7 +69,6 @@ type Msg
     | TermDeleted (Result Http.Error ())
     | UpdateTerm (Result Http.Error ())
     | ClickedNew
-    | ClickedView Uuid
     | Edit EditTerm
     | ChangedDropdown (ChangeEvent TermResponse)
     | ClickedCancelEdit
@@ -114,10 +113,6 @@ update req storage msg model =
 
         ClickedNew ->
             ( model, Request.pushRoute Route.Terms__New req )
-
-        -- TODO: Request.pushRoute (Route.Users__Id___Transactions { id = Uuid.toString id }) req
-        ClickedView _ ->
-            ( model, Cmd.none )
 
         Edit term ->
             ( { model | toUpdate = Just term }, Cmd.none )
@@ -228,26 +223,21 @@ termsToText related id =
 viewTerm : Shared.Model -> Bool -> List TermResponse -> TermResponse -> Element Msg
 viewTerm shared canEdit all term =
     let
-        onClick : Msg
-        onClick =
-            ClickedView term.id
-
         buttons : List (Element Msg)
         buttons =
             if canEdit then
-                [ defaultButton (Translations.Buttons.view shared.translations) onClick
-                , defaultButton (edit shared.translations) (Edit (editTermFromTerm term all))
+                [ defaultButton (edit shared.translations) (Edit (editTermFromTerm term all))
                 , defaultButton (delete shared.translations) (ClickedDelete term.id)
                 ]
 
             else
-                [ defaultButton (Translations.Buttons.view shared.translations) onClick ]
+                []
 
         body : Element msg
         body =
             paragraph [ Font.size 16 ] [ text (String.join ", " (relatedUuidToText term.related all)) ]
     in
-    keyedCard { title = term.name, rightLabel = "", body = [ body ], onClick = Just onClick, buttons = buttons } term.id
+    keyedCard { title = term.name, rightLabel = "", body = [ body ], onClick = Nothing, buttons = buttons } term.id
 
 
 editTerm : Shared.Model -> EditTerm -> Model -> List TermResponse -> Element Msg
