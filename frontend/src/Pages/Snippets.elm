@@ -142,7 +142,7 @@ update req storage msg model =
         ChangedAuthorsDropdown changeEvent ->
             case ( model.toUpdate, changeEvent ) of
                 ( Just toUpdate, SelectionChanged sth ) ->
-                    ( { model | authorsDropdown = updateModel (TextChanged "") model.authorsDropdown, toUpdate = Just { toUpdate | authors = Dict.insert (Uuid.toString sth.id) sth.name toUpdate.authors } }, Cmd.none )
+                    ( { model | authorsDropdown = updateModel changeEvent model.authorsDropdown, toUpdate = Just { toUpdate | authors = Dict.insert (Uuid.toString sth.id) sth.name toUpdate.authors } }, Cmd.none )
 
                 _ ->
                     ( { model | authorsDropdown = updateModel changeEvent model.authorsDropdown }, Cmd.none )
@@ -150,13 +150,13 @@ update req storage msg model =
         ChangedTermsDropdown changeEvent ->
             case ( model.toUpdate, changeEvent ) of
                 ( Just toUpdate, SelectionChanged sth ) ->
-                    ( { model | termsDropdown = updateModel (TextChanged "") model.termsDropdown, toUpdate = Just { toUpdate | terms = Dict.insert (Uuid.toString sth.id) sth.name toUpdate.terms } }, Cmd.none )
+                    ( { model | termsDropdown = updateModel changeEvent model.termsDropdown, toUpdate = Just { toUpdate | terms = Dict.insert (Uuid.toString sth.id) sth.name toUpdate.terms } }, Cmd.none )
 
                 _ ->
                     ( { model | termsDropdown = updateModel changeEvent model.termsDropdown }, Cmd.none )
 
         ClickedCancelEdit ->
-            ( { model | toUpdate = Nothing }, Cmd.none )
+            loadSnippets model.session
 
         ClickedSubmitEdit (Ok input) ->
             let

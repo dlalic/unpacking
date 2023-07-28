@@ -168,7 +168,7 @@ update req storage msg model =
             in
             case changeEvent of
                 SelectionChanged sth ->
-                    ( { model | authorsDropdown = updateModel (TextChanged "") model.authorsDropdown, toCreate = { toCreate | authors = Dict.insert (Uuid.toString sth.id) sth.name model.toCreate.authors } }, Cmd.none )
+                    ( { model | authorsDropdown = updateModel changeEvent model.authorsDropdown, toCreate = { toCreate | authors = Dict.insert (Uuid.toString sth.id) sth.name model.toCreate.authors } }, Cmd.none )
 
                 _ ->
                     ( { model | authorsDropdown = updateModel changeEvent model.authorsDropdown }, Cmd.none )
@@ -181,7 +181,7 @@ update req storage msg model =
             in
             case changeEvent of
                 SelectionChanged sth ->
-                    ( { model | termsDropdown = updateModel (TextChanged "") model.termsDropdown, toCreate = { toCreate | terms = Dict.insert (Uuid.toString sth.id) sth.name model.toCreate.terms } }, Cmd.none )
+                    ( { model | termsDropdown = updateModel changeEvent model.termsDropdown, toCreate = { toCreate | terms = Dict.insert (Uuid.toString sth.id) sth.name model.toCreate.terms } }, Cmd.none )
 
                 _ ->
                     ( { model | termsDropdown = updateModel changeEvent model.termsDropdown }, Cmd.none )
