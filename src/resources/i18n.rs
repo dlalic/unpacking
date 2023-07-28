@@ -79,4 +79,5 @@ pub struct Labels {
     pub no_users: String,
     pub on_error: String,
     pub on_sign_out: String,
+    pub video_thumbnail: String,
 }
