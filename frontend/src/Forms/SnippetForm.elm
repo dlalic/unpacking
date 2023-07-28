@@ -2,7 +2,7 @@ module Forms.SnippetForm exposing (EditSnippet, NewSnippet, defaultNew, editForm
 
 import Api.Data exposing (Media(..), mediaVariants)
 import Dict exposing (Dict)
-import Element exposing (Element, spacing)
+import Element exposing (Element, spacing, wrappedRow)
 import Forms.Fields exposing (linkField, snippetField)
 import Forms.Validators exposing (ValidationField, snippetValidator)
 import I18Next exposing (Translations)
@@ -51,9 +51,9 @@ newForm translations snippet authorsDropdown termsDropdown onEdit onCancel onSub
             , viewCheckBoxRow (checkBox translations snippet onEdit)
             , linkField translations snippet onEdit onSubmit
             , authorsDropdown
-            , Element.row [ spacing 8 ] (List.map (\( id, text ) -> tagButton text (onEdit { snippet | authors = Dict.remove id snippet.authors })) (Dict.toList snippet.authors))
+            , wrappedRow [ spacing 8 ] (List.map (\( id, text ) -> tagButton text (onEdit { snippet | authors = Dict.remove id snippet.authors })) (Dict.toList snippet.authors))
             , termsDropdown
-            , Element.row [ spacing 8 ] (List.map (\( id, text ) -> tagButton text (onEdit { snippet | terms = Dict.remove id snippet.terms })) (Dict.toList snippet.terms))
+            , wrappedRow [ spacing 8 ] (List.map (\( id, text ) -> tagButton text (onEdit { snippet | terms = Dict.remove id snippet.terms })) (Dict.toList snippet.terms))
             ]
     in
     viewForm translations (newSnippet translations) body (Just onCancel) onSubmit
@@ -68,9 +68,9 @@ editForm translations snippet authorsDropdown termsDropdown onEdit onCancel onSu
             , viewCheckBoxRow (checkBox translations snippet onEdit)
             , linkField translations snippet onEdit onSubmit
             , authorsDropdown
-            , Element.row [ spacing 8 ] (List.map (\( id, text ) -> tagButton text (onEdit { snippet | authors = Dict.remove id snippet.authors })) (Dict.toList snippet.authors))
+            , wrappedRow [ spacing 8 ] (List.map (\( id, text ) -> tagButton text (onEdit { snippet | authors = Dict.remove id snippet.authors })) (Dict.toList snippet.authors))
             , termsDropdown
-            , Element.row [ spacing 8 ] (List.map (\( id, text ) -> tagButton text (onEdit { snippet | terms = Dict.remove id snippet.terms })) (Dict.toList snippet.terms))
+            , wrappedRow [ spacing 8 ] (List.map (\( id, text ) -> tagButton text (onEdit { snippet | terms = Dict.remove id snippet.terms })) (Dict.toList snippet.terms))
             ]
     in
     viewForm translations (edit translations snippet.title) body (Just onCancel) onSubmit
