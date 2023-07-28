@@ -5,7 +5,7 @@ import Api.Data exposing (TermGraphResponse)
 import Api.Request.Default exposing (termsReadGraphGet)
 import Auth
 import Color exposing (Color)
-import Element exposing (Element, text)
+import Element exposing (Element, centerX, el, text)
 import Force
 import Gen.Route as Route
 import Graph exposing (Edge, Graph, Node, NodeContext, NodeId)
@@ -24,7 +24,7 @@ import TypedSvg.Attributes exposing (class, color, fill, points, stroke, viewBox
 import TypedSvg.Attributes.InPx exposing (strokeWidth, x1, x2, y1, y2)
 import TypedSvg.Core exposing (Attribute, Svg)
 import TypedSvg.Events exposing (onClick)
-import TypedSvg.Types exposing (Paint(..))
+import TypedSvg.Types exposing (Paint(..), px)
 import UI.Layout as Layout
 import View exposing (View)
 
@@ -97,7 +97,7 @@ viewUser shared model =
         Loaded response ->
             case model.selected of
                 Just v ->
-                    [ text v, graphView shared.window response ]
+                    [ el [ centerX ] (text v), graphView shared.window response ]
 
                 _ ->
                     [ graphView shared.window response ]
@@ -165,17 +165,42 @@ nodeSize size node =
     hexagon ( node.x, node.y )
         size
         [ fill (Paint (Scale.convert colorScale node.x))
-
-        --, onClick (Edit { email= node.value, password="", errors = []})
-        --, onMouseOver (TermSelected node.value) ]
         , onClick (TermSelected node.value)
         ]
         [ title [ color (Color.rgb255 0 0 0) ] [ TypedSvg.Core.text node.value ] ]
 
 
-nodeElement : Float -> Node Entity -> Svg Msg
-nodeElement size node =
-    nodeSize size node.label
+nodeElement : Node Entity -> Svg Msg
+nodeElement node =
+    nodeSize 8 node.label
+
+
+textElement : Float -> Float -> Node Entity -> Svg Msg
+textElement width height node =
+    let
+        x : Float
+        x =
+            if node.label.x < width / 2 then
+                node.label.x - toFloat (String.length node.label.value) * 7 - 10
+
+            else
+                node.label.x + 10
+
+        y : Float
+        y =
+            if node.label.y < height / 2 then
+                node.label.y - 5
+
+            else
+                node.label.y + 10
+    in
+    TypedSvg.text_
+        [ TypedSvg.Attributes.x (px x)
+        , TypedSvg.Attributes.y (px y)
+        , TypedSvg.Attributes.fontFamily [ "monospace" ]
+        , TypedSvg.Attributes.fontSize (px 12)
+        ]
+        [ TypedSvg.Core.text node.label.value ]
 
 
 type alias Entity =
@@ -221,7 +246,7 @@ graphView window response =
 
         h : Float
         h =
-            toFloat window.height
+            toFloat 480
 
         graph : Graph (Force.Entity Int { value : String }) ()
         graph =
@@ -242,7 +267,7 @@ graphView window response =
                     (\{ from, to } ->
                         { source = from
                         , target = to
-                        , distance = w / 9
+                        , distance = 80
                         , strength = Nothing
                         }
                     )
@@ -250,7 +275,7 @@ graphView window response =
         forces : List (Force.Force NodeId)
         forces =
             [ Force.customLinks 1 links
-            , Force.manyBodyStrength -30 (List.map .id (Graph.nodes graph))
+            , Force.manyBodyStrength -80 (List.map .id (Graph.nodes graph))
             , Force.center (w / 2) (h / 2)
             ]
 
@@ -264,8 +289,7 @@ graphView window response =
     Element.html
         (svg [ viewBox 0 0 w h ]
             [ g [ class [ "links" ] ] (List.map (linkElement model) (Graph.edges model))
-            , g [ class [ "nodes" ] ] (List.map (nodeElement (w / 50)) (Graph.nodes model))
-
-            --, g [ class [ "texts" ] ] (List.map textElement (Graph.nodes model))
+            , g [ class [ "nodes" ] ] (List.map nodeElement (Graph.nodes model))
+            , g [ class [ "texts" ] ] (List.map (textElement w h) (Graph.nodes model))
             ]
         )
