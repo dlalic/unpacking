@@ -1,13 +1,15 @@
 module Pages.Snippets exposing (Model, Msg, State, page)
 
 import Api
-import Api.Data exposing (AuthorResponse, Role(..), SnippetResponse, TermResponse, UpdateSnippet)
+import Api.Data exposing (AuthorResponse, Media(..), Role(..), SnippetResponse, TermResponse, UpdateSnippet)
 import Api.Request.Default exposing (deleteSnippets, readAllAuthors, readAllSnippets, readAllTerms, updateSnippets)
 import Auth
 import Common exposing (uuidFromString)
 import Dict
-import Element exposing (Element, paragraph, text)
+import Element exposing (Element, height, image, paragraph, px, text, width)
 import Element.Font as Font
+import Embed.Youtube
+import Embed.Youtube.Thumbnail as Thumb
 import Forms.SnippetForm exposing (EditSnippet, editForm, editSnippetValidator, stringFromMedia)
 import Forms.Validators exposing (ValidationField)
 import Gen.Route as Route
@@ -21,7 +23,7 @@ import Shared
 import Storage exposing (Storage)
 import Translations.Buttons exposing (delete, edit, newSnippet, source)
 import Translations.Forms as Forms
-import Translations.Labels exposing (loading, onError)
+import Translations.Labels exposing (loading, onError, videoThumbnail)
 import Translations.Titles exposing (snippets)
 import UI.Button exposing (defaultButton)
 import UI.Card exposing (keyedCard)
@@ -29,6 +31,7 @@ import UI.Dialog exposing (defaultDialog)
 import UI.Dropdown exposing (Dropdown, dropdown, initModel, updateModel)
 import UI.Layout as Layout
 import UI.Link exposing (defaultLink)
+import Url
 import Uuid exposing (Uuid)
 import Validate exposing (Valid, fromValid, validate)
 import View exposing (View)
@@ -280,10 +283,25 @@ viewSnippet shared canEdit snippet =
                 Nothing ->
                     []
 
+        video : List (Element msg)
+        video =
+            case ( snippet.link, snippet.media ) of
+                ( Just v, MediaVideo ) ->
+                    case Maybe.andThen Embed.Youtube.fromUrl (Url.fromString v) of
+                        Just a ->
+                            [ image [ width (px 320), height (px 180) ] { src = Url.toString (Thumb.toUrl Thumb.MediumQuality a), description = videoThumbnail shared.translations } ]
+
+                        Nothing ->
+                            []
+
+                _ ->
+                    []
+
         body : List (Element msg)
         body =
             paragraph [ Font.family [ Font.typeface "Redaction", Font.serif ], Font.size 18 ] [ text snippet.text ]
-                :: link
+                :: video
+                ++ link
                 ++ [ paragraph [ Font.size 16 ] [ text (String.join ", " (List.map (\v -> v.name) snippet.terms)) ] ]
 
         buttons : List (Element Msg)

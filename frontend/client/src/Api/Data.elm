@@ -185,6 +185,7 @@ type alias Labels =
     , noUsers : String
     , onError : String
     , onSignOut : String
+    , videoThumbnail : String
     }
 
 
@@ -535,6 +536,7 @@ encodeLabelsPairs model =
             , encode "no_users" Json.Encode.string model.noUsers
             , encode "on_error" Json.Encode.string model.onError
             , encode "on_sign_out" Json.Encode.string model.onSignOut
+            , encode "video_thumbnail" Json.Encode.string model.videoThumbnail
             ]
     in
     pairs
@@ -939,6 +941,7 @@ labelsDecoder =
         |> decode "no_users" Json.Decode.string 
         |> decode "on_error" Json.Decode.string 
         |> decode "on_sign_out" Json.Decode.string 
+        |> decode "video_thumbnail" Json.Decode.string 
 
 
 mediaDecoder : Json.Decode.Decoder Media

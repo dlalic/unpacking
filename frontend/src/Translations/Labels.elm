@@ -40,3 +40,8 @@ onError translations reason =
 onSignOut : Translations -> String
 onSignOut translations =
     t translations "labels.on_sign_out"
+
+
+videoThumbnail : Translations -> String
+videoThumbnail translations =
+    t translations "labels.video_thumbnail"

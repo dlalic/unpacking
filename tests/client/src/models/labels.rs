@@ -27,10 +27,12 @@ pub struct Labels {
     pub on_error: String,
     #[serde(rename = "on_sign_out")]
     pub on_sign_out: String,
+    #[serde(rename = "video_thumbnail")]
+    pub video_thumbnail: String,
 }
 
 impl Labels {
-    pub fn new(hello: String, loading: String, no_snippets: String, no_terms: String, no_users: String, on_error: String, on_sign_out: String) -> Labels {
+    pub fn new(hello: String, loading: String, no_snippets: String, no_terms: String, no_users: String, on_error: String, on_sign_out: String, video_thumbnail: String) -> Labels {
         Labels {
             hello,
             loading,
@@ -39,6 +41,7 @@ impl Labels {
             no_users,
             on_error,
             on_sign_out,
+            video_thumbnail,
         }
     }
 }

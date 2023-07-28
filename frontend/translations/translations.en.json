@@ -57,6 +57,7 @@
     "no_terms": "No terms",
     "no_users": "No users",
     "on_error": "Error: {{reason}}",
-    "on_sign_out": "Signed out successfully!"
+    "on_sign_out": "Signed out successfully!",
+    "video_thumbnail": "Video thumbnail"
   }
 }
