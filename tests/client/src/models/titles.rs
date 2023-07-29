@@ -21,6 +21,8 @@ pub struct Titles {
     pub snippets: String,
     #[serde(rename = "source_code")]
     pub source_code: String,
+    #[serde(rename = "stats")]
+    pub stats: String,
     #[serde(rename = "terms")]
     pub terms: String,
     #[serde(rename = "users")]
@@ -28,12 +30,13 @@ pub struct Titles {
 }
 
 impl Titles {
-    pub fn new(home: String, name: String, snippets: String, source_code: String, terms: String, users: String) -> Titles {
+    pub fn new(home: String, name: String, snippets: String, source_code: String, stats: String, terms: String, users: String) -> Titles {
         Titles {
             home,
             name,
             snippets,
             source_code,
+            stats,
             terms,
             users,
         }

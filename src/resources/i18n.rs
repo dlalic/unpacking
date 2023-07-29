@@ -33,6 +33,7 @@ pub struct Titles {
     pub name: String,
     pub snippets: String,
     pub source_code: String,
+    pub stats: String,
     pub terms: String,
     pub users: String,
 }

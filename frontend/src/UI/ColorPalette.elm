@@ -1,6 +1,9 @@
-module UI.ColorPalette exposing (black, darkGray, green, lightGray, red, white)
+module UI.ColorPalette exposing (black, colorFromScale, darkGray, green, lightGray, red, white)
 
+import Color
 import Element exposing (Color, rgb255)
+import Scale exposing (SequentialScale)
+import Scale.Color
 
 
 white : Color
@@ -31,3 +34,13 @@ darkGray =
 lightGray : Color
 lightGray =
     rgb255 120 120 120
+
+
+colorFromScale : Float -> Color.Color
+colorFromScale value =
+    let
+        colorScale : SequentialScale Color.Color
+        colorScale =
+            Scale.sequential Scale.Color.viridisInterpolator ( 200, 700 )
+    in
+    Scale.convert colorScale value

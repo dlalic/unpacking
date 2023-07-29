@@ -55,6 +55,7 @@ fn api_router(repo: Repo) -> Router {
         };
         route.with_openapi(info, |mut route| {
             route.resource::<resources::snippet::Resource>("snippets");
+            route.resource::<resources::snippet::StatsResource>("snippets");
             route.resource::<resources::term::Resource>("terms");
             route.resource::<resources::author::Resource>("authors");
             route.resource::<resources::term::GraphResource>("terms");

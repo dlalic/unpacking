@@ -105,7 +105,7 @@ fn delete(
 }
 
 #[derive(Resource)]
-#[resource(read_graph)]
+#[resource(graph)]
 pub struct GraphResource;
 
 #[derive(Serialize, OpenapiType)]
@@ -114,16 +114,8 @@ struct TermGraphResponse {
     nodes: Vec<Vec<usize>>,
 }
 
-#[endpoint(
-    uri = "read_graph",
-    method = "Method::GET",
-    params = false,
-    body = false
-)]
-fn read_graph(
-    auth: AuthenticationStatus,
-    conn: &mut PgConnection,
-) -> Result<TermGraphResponse, Error> {
+#[endpoint(uri = "graph", method = "Method::GET", params = false, body = false)]
+fn graph(auth: AuthenticationStatus, conn: &mut PgConnection) -> Result<TermGraphResponse, Error> {
     auth.ok()?;
     let graph = terms::select_graph(conn)?;
     let result = TermGraphResponse {

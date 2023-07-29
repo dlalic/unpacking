@@ -6,6 +6,7 @@ use crate::resources::auth::{AuthenticationStatus, Permission};
 use crate::models::enums::Media;
 use crate::resources::validation::snippets::MIN_TEXT_LENGTH;
 use diesel::PgConnection;
+use gotham_restful::gotham::hyper::Method;
 use gotham_restful::*;
 use openapi_type::OpenapiType;
 use serde_derive::{Deserialize, Serialize};
@@ -174,4 +175,31 @@ fn delete(
 ) -> Result<NoContent, Error> {
     auth.ok().admin()?;
     snippets::delete(id, conn).map(|_| NoContent::default())
+}
+
+#[derive(Resource)]
+#[resource(stats)]
+pub struct StatsResource;
+
+#[derive(Serialize, OpenapiType)]
+struct StatsResponse {
+    pub media: Vec<MediaStatsResponse>,
+}
+
+#[derive(Serialize, OpenapiType)]
+struct MediaStatsResponse {
+    pub media: Media,
+    pub count: i64,
+}
+
+#[endpoint(uri = "stats", method = "Method::GET", params = false, body = false)]
+fn stats(auth: AuthenticationStatus, conn: &mut PgConnection) -> Result<StatsResponse, Error> {
+    auth.ok()?;
+    let media_stats = snippets::select_media_stats(conn)?;
+    let media = media_stats
+        .into_iter()
+        .map(|(media, count)| MediaStatsResponse { media, count })
+        .collect();
+    let result = StatsResponse { media };
+    Ok(result)
 }

@@ -13,10 +13,12 @@ src/models/dialogs.rs
 src/models/forms.rs
 src/models/labels.rs
 src/models/media.rs
+src/models/media_stats_response.rs
 src/models/mod.rs
 src/models/role.rs
 src/models/snippet_response.rs
 src/models/snippet_term_response.rs
+src/models/stats_response.rs
 src/models/term_graph_response.rs
 src/models/term_response.rs
 src/models/titles.rs

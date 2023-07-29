@@ -200,3 +200,14 @@ pub fn update(
         Ok(())
     })
 }
+
+pub fn select_media_stats(conn: &mut PgConnection) -> Result<Vec<(Media, i64)>, Error> {
+    snippets::dsl::snippets
+        .select((
+            snippets::dsl::media,
+            diesel::dsl::sql::<diesel::sql_types::BigInt>("count(*)"),
+        ))
+        .group_by(snippets::dsl::media)
+        .load(conn)
+        .map_err(Error::from)
+}

@@ -24,9 +24,11 @@ module Api.Data exposing
     , Forms
     , Labels
     , Media(..), mediaVariants
+    , MediaStatsResponse
     , Role(..), roleVariants
     , SnippetResponse
     , SnippetTermResponse
+    , StatsResponse
     , TermGraphResponse
     , TermResponse
     , Titles
@@ -46,9 +48,11 @@ module Api.Data exposing
     , encodeForms
     , encodeLabels
     , encodeMedia
+    , encodeMediaStatsResponse
     , encodeRole
     , encodeSnippetResponse
     , encodeSnippetTermResponse
+    , encodeStatsResponse
     , encodeTermGraphResponse
     , encodeTermResponse
     , encodeTitles
@@ -68,9 +72,11 @@ module Api.Data exposing
     , formsDecoder
     , labelsDecoder
     , mediaDecoder
+    , mediaStatsResponseDecoder
     , roleDecoder
     , snippetResponseDecoder
     , snippetTermResponseDecoder
+    , statsResponseDecoder
     , termGraphResponseDecoder
     , termResponseDecoder
     , titlesDecoder
@@ -209,6 +215,12 @@ mediaVariants =
     ]
 
 
+type alias MediaStatsResponse =
+    { media : Media
+    , count : Int
+    }
+
+
 type Role
     = RoleUser
     | RoleAdmin
@@ -237,6 +249,11 @@ type alias SnippetTermResponse =
     }
 
 
+type alias StatsResponse =
+    { media : List (MediaStatsResponse)
+    }
+
+
 type alias TermGraphResponse =
     { terms : List (String)
     , nodes : List (List (Int))
@@ -255,6 +272,7 @@ type alias Titles =
     , name : String
     , snippets : String
     , sourceCode : String
+    , stats : String
     , terms : String
     , users : String
     }
@@ -569,6 +587,27 @@ encodeMedia =
     Json.Encode.string << stringFromMedia
 
 
+encodeMediaStatsResponse : MediaStatsResponse -> Json.Encode.Value
+encodeMediaStatsResponse =
+    encodeObject << encodeMediaStatsResponsePairs
+
+
+encodeMediaStatsResponseWithTag : ( String, String ) -> MediaStatsResponse -> Json.Encode.Value
+encodeMediaStatsResponseWithTag (tagField, tag) model =
+    encodeObject (encodeMediaStatsResponsePairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeMediaStatsResponsePairs : MediaStatsResponse -> List EncodedField
+encodeMediaStatsResponsePairs model =
+    let
+        pairs =
+            [ encode "media" encodeMedia model.media
+            , encode "count" Json.Encode.int model.count
+            ]
+    in
+    pairs
+
+
 stringFromRole : Role -> String
 stringFromRole model =
     case model of
@@ -625,6 +664,26 @@ encodeSnippetTermResponsePairs model =
         pairs =
             [ encode "id" Uuid.encode model.id
             , encode "name" Json.Encode.string model.name
+            ]
+    in
+    pairs
+
+
+encodeStatsResponse : StatsResponse -> Json.Encode.Value
+encodeStatsResponse =
+    encodeObject << encodeStatsResponsePairs
+
+
+encodeStatsResponseWithTag : ( String, String ) -> StatsResponse -> Json.Encode.Value
+encodeStatsResponseWithTag (tagField, tag) model =
+    encodeObject (encodeStatsResponsePairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeStatsResponsePairs : StatsResponse -> List EncodedField
+encodeStatsResponsePairs model =
+    let
+        pairs =
+            [ encode "media" (Json.Encode.list encodeMediaStatsResponse) model.media
             ]
     in
     pairs
@@ -691,6 +750,7 @@ encodeTitlesPairs model =
             , encode "name" Json.Encode.string model.name
             , encode "snippets" Json.Encode.string model.snippets
             , encode "source_code" Json.Encode.string model.sourceCode
+            , encode "stats" Json.Encode.string model.stats
             , encode "terms" Json.Encode.string model.terms
             , encode "users" Json.Encode.string model.users
             ]
@@ -973,6 +1033,13 @@ mediaDecoder =
             )
 
 
+mediaStatsResponseDecoder : Json.Decode.Decoder MediaStatsResponse
+mediaStatsResponseDecoder =
+    Json.Decode.succeed MediaStatsResponse
+        |> decode "media" mediaDecoder 
+        |> decode "count" Json.Decode.int 
+
+
 roleDecoder : Json.Decode.Decoder Role
 roleDecoder =
     Json.Decode.string
@@ -1008,6 +1075,12 @@ snippetTermResponseDecoder =
         |> decode "name" Json.Decode.string 
 
 
+statsResponseDecoder : Json.Decode.Decoder StatsResponse
+statsResponseDecoder =
+    Json.Decode.succeed StatsResponse
+        |> decode "media" (Json.Decode.list mediaStatsResponseDecoder) 
+
+
 termGraphResponseDecoder : Json.Decode.Decoder TermGraphResponse
 termGraphResponseDecoder =
     Json.Decode.succeed TermGraphResponse
@@ -1030,6 +1103,7 @@ titlesDecoder =
         |> decode "name" Json.Decode.string 
         |> decode "snippets" Json.Decode.string 
         |> decode "source_code" Json.Decode.string 
+        |> decode "stats" Json.Decode.string 
         |> decode "terms" Json.Decode.string 
         |> decode "users" Json.Decode.string 
 

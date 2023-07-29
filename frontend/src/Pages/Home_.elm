@@ -2,9 +2,9 @@ module Pages.Home_ exposing (Model, Msg, State, page)
 
 import Api
 import Api.Data exposing (TermGraphResponse)
-import Api.Request.Default exposing (termsReadGraphGet)
+import Api.Request.Default exposing (termsGraphGet)
 import Auth
-import Color exposing (Color)
+import Color
 import Element exposing (Element, centerX, el, text)
 import Force
 import Gen.Route as Route
@@ -13,8 +13,6 @@ import Http
 import Page
 import Problem exposing (isUnauthenticated)
 import Request exposing (Request)
-import Scale exposing (SequentialScale)
-import Scale.Color
 import Shared
 import Storage exposing (Storage)
 import Translations.Labels exposing (loading, onError)
@@ -25,6 +23,7 @@ import TypedSvg.Attributes.InPx exposing (strokeWidth, x1, x2, y1, y2)
 import TypedSvg.Core exposing (Attribute, Svg)
 import TypedSvg.Events exposing (onClick)
 import TypedSvg.Types exposing (Paint(..), px)
+import UI.ColorPalette exposing (colorFromScale)
 import UI.Layout as Layout
 import View exposing (View)
 
@@ -108,12 +107,7 @@ viewUser shared model =
 
 loadTerms : Auth.User -> ( Model, Cmd Msg )
 loadTerms session =
-    ( { session = session, state = Loading, selected = Nothing }, Api.send TermsLoaded (termsReadGraphGet session.token) )
-
-
-colorScale : SequentialScale Color
-colorScale =
-    Scale.sequential Scale.Color.viridisInterpolator ( 200, 700 )
+    ( { session = session, state = Loading, selected = Nothing }, Api.send TermsLoaded (termsGraphGet session.token) )
 
 
 linkElement : Graph Entity () -> Edge () -> Svg msg
@@ -133,7 +127,7 @@ linkElement graph edge =
     in
     line
         [ strokeWidth 1
-        , stroke (Paint (Scale.convert colorScale source.x))
+        , stroke (Paint (colorFromScale source.x))
         , x1 source.x
         , y1 source.y
         , x2 target.x
@@ -164,7 +158,7 @@ nodeSize : Float -> Entity -> Svg Msg
 nodeSize size node =
     hexagon ( node.x, node.y )
         size
-        [ fill (Paint (Scale.convert colorScale node.x))
+        [ fill (Paint (colorFromScale node.x))
         , onClick (TermSelected node.value)
         ]
         [ title [ color (Color.rgb255 0 0 0) ] [ TypedSvg.Core.text node.value ] ]
@@ -267,7 +261,7 @@ graphView window response =
                     (\{ from, to } ->
                         { source = from
                         , target = to
-                        , distance = 80
+                        , distance = w / 12
                         , strength = Nothing
                         }
                     )
