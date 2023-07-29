@@ -22,7 +22,7 @@ pub fn insert(names: Vec<String>, conn: &mut PgConnection) -> Result<Vec<Uuid>, 
 
 pub fn select_all(conn: &mut PgConnection) -> Result<Vec<Author>, Error> {
     authors::dsl::authors
-        .order(authors::dsl::created_at.asc())
+        .order(authors::dsl::name)
         .load(conn)
         .map_err(Error::from)
 }
