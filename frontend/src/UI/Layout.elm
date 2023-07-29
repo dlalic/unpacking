@@ -10,7 +10,7 @@ import Html exposing (Html)
 import I18Next exposing (Translations)
 import Shared
 import Translations.Buttons exposing (signOut)
-import Translations.Titles exposing (home, name, snippets, sourceCode, terms, users)
+import Translations.Titles exposing (home, name, snippets, sourceCode, stats, terms, users)
 import UI.Dimensions exposing (fillMaxViewWidth)
 import UI.Header exposing (HeaderButton, Home, header)
 import UI.Link exposing (footerLink)
@@ -63,15 +63,17 @@ tabs shared route session =
     case session.role of
         RoleAdmin ->
             [ { title = home shared.translations, selected = route == Route.Home_, route = Route.Home_ }
-            , { title = users shared.translations, selected = route == Route.Users, route = Route.Users }
             , { title = terms shared.translations, selected = route == Route.Terms, route = Route.Terms }
             , { title = snippets shared.translations, selected = route == Route.Snippets, route = Route.Snippets }
+            , { title = stats shared.translations, selected = route == Route.Stats, route = Route.Stats }
+            , { title = users shared.translations, selected = route == Route.Users, route = Route.Users }
             ]
 
         RoleUser ->
             [ { title = home shared.translations, selected = route == Route.Home_, route = Route.Home_ }
             , { title = terms shared.translations, selected = route == Route.Terms, route = Route.Terms }
             , { title = snippets shared.translations, selected = route == Route.Snippets, route = Route.Snippets }
+            , { title = stats shared.translations, selected = route == Route.Stats, route = Route.Stats }
             ]
 
 

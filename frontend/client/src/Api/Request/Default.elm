@@ -27,7 +27,8 @@ module Api.Request.Default exposing
     , readAllTranslations
     , readAllUsers
     , readUsers
-    , termsReadGraphGet
+    , snippetsStatsGet
+    , termsGraphGet
     , updateSnippets
     , updateTerms
     , updateUsers
@@ -223,11 +224,25 @@ readUsers id_path auth_token =
 
 
 
-termsReadGraphGet : String -> Api.Request Api.Data.TermGraphResponse
-termsReadGraphGet auth_token =
+snippetsStatsGet : String -> Api.Request Api.Data.StatsResponse
+snippetsStatsGet auth_token =
     Api.request
         "GET"
-        "/terms/read_graph"
+        "/snippets/stats"
+        []
+        []
+        []
+        Nothing
+        Api.Data.statsResponseDecoder
+        |> Api.withBearerToken auth_token
+
+
+
+termsGraphGet : String -> Api.Request Api.Data.TermGraphResponse
+termsGraphGet auth_token =
+    Api.request
+        "GET"
+        "/terms/graph"
         []
         []
         []
