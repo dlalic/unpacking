@@ -39,7 +39,7 @@ pub fn insert(term: Term, related: Vec<Uuid>, conn: &mut PgConnection) -> Result
 
 pub fn select_all(conn: &mut PgConnection) -> Result<Vec<Term>, Error> {
     terms::dsl::terms
-        .order(terms::dsl::created_at.asc())
+        .order(terms::dsl::name)
         .load(conn)
         .map_err(Error::from)
 }

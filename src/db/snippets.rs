@@ -73,7 +73,7 @@ pub fn insert(
 
 pub fn select_all(conn: &mut PgConnection) -> Result<Vec<Snippet>, Error> {
     snippets::dsl::snippets
-        .order(snippets::dsl::created_at.asc())
+        .order(snippets::dsl::created_at.desc())
         .load(conn)
         .map_err(Error::from)
 }
