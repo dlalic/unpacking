@@ -17,8 +17,6 @@ pub struct Forms {
     pub authors: String,
     #[serde(rename = "edit")]
     pub edit: String,
-    #[serde(rename = "email")]
-    pub email: String,
     #[serde(rename = "link")]
     pub link: String,
     #[serde(rename = "media")]
@@ -37,8 +35,6 @@ pub struct Forms {
     pub media_website: String,
     #[serde(rename = "name")]
     pub name: String,
-    #[serde(rename = "on_email_empty")]
-    pub on_email_empty: String,
     #[serde(rename = "on_length_less_than")]
     pub on_length_less_than: String,
     #[serde(rename = "on_name_empty")]
@@ -47,6 +43,8 @@ pub struct Forms {
     pub on_password_empty: String,
     #[serde(rename = "on_snippet_empty")]
     pub on_snippet_empty: String,
+    #[serde(rename = "on_username_empty")]
+    pub on_username_empty: String,
     #[serde(rename = "password")]
     pub password: String,
     #[serde(rename = "role")]
@@ -61,14 +59,15 @@ pub struct Forms {
     pub text: String,
     #[serde(rename = "terms")]
     pub terms: String,
+    #[serde(rename = "username")]
+    pub username: String,
 }
 
 impl Forms {
-    pub fn new(authors: String, edit: String, email: String, link: String, media: String, media_blog: String, media_book: String, media_news: String, media_twitter: String, media_video: String, media_website: String, name: String, on_email_empty: String, on_length_less_than: String, on_name_empty: String, on_password_empty: String, on_snippet_empty: String, password: String, role: String, role_admin: String, role_user: String, related: String, text: String, terms: String) -> Forms {
+    pub fn new(authors: String, edit: String, link: String, media: String, media_blog: String, media_book: String, media_news: String, media_twitter: String, media_video: String, media_website: String, name: String, on_length_less_than: String, on_name_empty: String, on_password_empty: String, on_snippet_empty: String, on_username_empty: String, password: String, role: String, role_admin: String, role_user: String, related: String, text: String, terms: String, username: String) -> Forms {
         Forms {
             authors,
             edit,
-            email,
             link,
             media,
             media_blog,
@@ -78,11 +77,11 @@ impl Forms {
             media_video,
             media_website,
             name,
-            on_email_empty,
             on_length_less_than,
             on_name_empty,
             on_password_empty,
             on_snippet_empty,
+            on_username_empty,
             password,
             role,
             role_admin,
@@ -90,6 +89,7 @@ impl Forms {
             related,
             text,
             terms,
+            username,
         }
     }
 }

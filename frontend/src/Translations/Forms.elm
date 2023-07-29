@@ -17,11 +17,6 @@ edit translations sth =
     tr translations Curly "forms.edit" [ ( "sth", sth ) ]
 
 
-email : Translations -> String
-email translations =
-    t translations "forms.email"
-
-
 link : Translations -> String
 link translations =
     t translations "forms.link"
@@ -67,11 +62,6 @@ name translations =
     t translations "forms.name"
 
 
-onEmailEmpty : Translations -> String
-onEmailEmpty translations =
-    t translations "forms.on_email_empty"
-
-
 onLengthLessThan : Translations -> String -> String
 onLengthLessThan translations n =
     tr translations Curly "forms.on_length_less_than" [ ( "n", n ) ]
@@ -90,6 +80,11 @@ onPasswordEmpty translations =
 onSnippetEmpty : Translations -> String
 onSnippetEmpty translations =
     t translations "forms.on_snippet_empty"
+
+
+onUsernameEmpty : Translations -> String
+onUsernameEmpty translations =
+    t translations "forms.on_username_empty"
 
 
 password : Translations -> String
@@ -125,3 +120,8 @@ text translations =
 terms : Translations -> String
 terms translations =
     t translations "forms.terms"
+
+
+username : Translations -> String
+username translations =
+    t translations "forms.username"

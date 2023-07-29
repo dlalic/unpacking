@@ -47,7 +47,6 @@ pub struct Dialogs {
 pub struct Forms {
     pub authors: String,
     pub edit: String,
-    pub email: String,
     pub link: String,
     pub media: String,
     pub media_blog: String,
@@ -57,11 +56,11 @@ pub struct Forms {
     pub media_video: String,
     pub media_website: String,
     pub name: String,
-    pub on_email_empty: String,
     pub on_length_less_than: String,
     pub on_name_empty: String,
     pub on_password_empty: String,
     pub on_snippet_empty: String,
+    pub on_username_empty: String,
     pub password: String,
     pub role: String,
     pub role_admin: String,
@@ -69,6 +68,7 @@ pub struct Forms {
     pub related: String,
     pub text: String,
     pub terms: String,
+    pub username: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, OpenapiType)]
