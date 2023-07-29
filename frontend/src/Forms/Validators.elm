@@ -1,7 +1,7 @@
 module Forms.Validators exposing (ValidationField(..), currentPasswordValidator, emailValidator, nameValidator, passwordValidator, snippetValidator)
 
 import I18Next exposing (Translations)
-import Translations.Forms exposing (onEmailEmpty, onLengthLessThan, onNameEmpty, onPasswordEmpty, onSnippetEmpty)
+import Translations.Forms exposing (onLengthLessThan, onNameEmpty, onPasswordEmpty, onSnippetEmpty, onUsernameEmpty)
 import Validate exposing (Validator, ifBlank, ifFalse)
 
 
@@ -23,7 +23,7 @@ nameValidator translations =
 emailValidator : Translations -> Validator ( ValidationField, String ) { a | email : String }
 emailValidator translations =
     Validate.firstError
-        [ ifBlank .email ( Email, onEmailEmpty translations )
+        [ ifBlank .email ( Email, onUsernameEmpty translations )
         , ifNotMinimumLength .email 6 ( Email, onLengthLessThan translations "6" )
         ]
 

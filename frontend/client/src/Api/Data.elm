@@ -158,7 +158,6 @@ type alias Dialogs =
 type alias Forms =
     { authors : String
     , edit : String
-    , email : String
     , link : String
     , media : String
     , mediaBlog : String
@@ -168,11 +167,11 @@ type alias Forms =
     , mediaVideo : String
     , mediaWebsite : String
     , name : String
-    , onEmailEmpty : String
     , onLengthLessThan : String
     , onNameEmpty : String
     , onPasswordEmpty : String
     , onSnippetEmpty : String
+    , onUsernameEmpty : String
     , password : String
     , role : String
     , roleAdmin : String
@@ -180,6 +179,7 @@ type alias Forms =
     , related : String
     , text : String
     , terms : String
+    , username : String
     }
 
 
@@ -506,7 +506,6 @@ encodeFormsPairs model =
         pairs =
             [ encode "authors" Json.Encode.string model.authors
             , encode "edit" Json.Encode.string model.edit
-            , encode "email" Json.Encode.string model.email
             , encode "link" Json.Encode.string model.link
             , encode "media" Json.Encode.string model.media
             , encode "media_blog" Json.Encode.string model.mediaBlog
@@ -516,11 +515,11 @@ encodeFormsPairs model =
             , encode "media_video" Json.Encode.string model.mediaVideo
             , encode "media_website" Json.Encode.string model.mediaWebsite
             , encode "name" Json.Encode.string model.name
-            , encode "on_email_empty" Json.Encode.string model.onEmailEmpty
             , encode "on_length_less_than" Json.Encode.string model.onLengthLessThan
             , encode "on_name_empty" Json.Encode.string model.onNameEmpty
             , encode "on_password_empty" Json.Encode.string model.onPasswordEmpty
             , encode "on_snippet_empty" Json.Encode.string model.onSnippetEmpty
+            , encode "on_username_empty" Json.Encode.string model.onUsernameEmpty
             , encode "password" Json.Encode.string model.password
             , encode "role" Json.Encode.string model.role
             , encode "role_admin" Json.Encode.string model.roleAdmin
@@ -528,6 +527,7 @@ encodeFormsPairs model =
             , encode "related" Json.Encode.string model.related
             , encode "text" Json.Encode.string model.text
             , encode "terms" Json.Encode.string model.terms
+            , encode "username" Json.Encode.string model.username
             ]
     in
     pairs
@@ -967,7 +967,6 @@ formsDecoder =
     Json.Decode.succeed Forms
         |> decode "authors" Json.Decode.string 
         |> decode "edit" Json.Decode.string 
-        |> decode "email" Json.Decode.string 
         |> decode "link" Json.Decode.string 
         |> decode "media" Json.Decode.string 
         |> decode "media_blog" Json.Decode.string 
@@ -977,11 +976,11 @@ formsDecoder =
         |> decode "media_video" Json.Decode.string 
         |> decode "media_website" Json.Decode.string 
         |> decode "name" Json.Decode.string 
-        |> decode "on_email_empty" Json.Decode.string 
         |> decode "on_length_less_than" Json.Decode.string 
         |> decode "on_name_empty" Json.Decode.string 
         |> decode "on_password_empty" Json.Decode.string 
         |> decode "on_snippet_empty" Json.Decode.string 
+        |> decode "on_username_empty" Json.Decode.string 
         |> decode "password" Json.Decode.string 
         |> decode "role" Json.Decode.string 
         |> decode "role_admin" Json.Decode.string 
@@ -989,6 +988,7 @@ formsDecoder =
         |> decode "related" Json.Decode.string 
         |> decode "text" Json.Decode.string 
         |> decode "terms" Json.Decode.string 
+        |> decode "username" Json.Decode.string 
 
 
 labelsDecoder : Json.Decode.Decoder Labels

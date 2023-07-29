@@ -4,14 +4,14 @@ import Common exposing (errorsForField)
 import Element exposing (Element)
 import Forms.Validators exposing (ValidationField(..))
 import I18Next exposing (Translations)
-import Translations.Forms exposing (email, link, name, password, text)
+import Translations.Forms exposing (link, name, password, text, username)
 import UI.TextField exposing (currentPasswordTextFieldWithValidation, emailTextFieldWithValidation, multilineTextFieldWithValidation, textFieldWithValidation)
 
 
 emailField : Translations -> { a | email : String, errors : List ( ValidationField, String ) } -> ({ a | email : String, errors : List ( ValidationField, String ) } -> msg) -> msg -> Element msg
 emailField translations user onEdit onSubmit =
     emailTextFieldWithValidation
-        { title = email translations
+        { title = username translations
         , initial = user.email
         , onChange = \v -> onEdit { user | email = v }
         , onEnterKey = onSubmit
