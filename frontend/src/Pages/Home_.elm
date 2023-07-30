@@ -1,11 +1,13 @@
-module Pages.Home_ exposing (Model, Msg, State, page)
+module Pages.Home_ exposing (GraphState, Model, Msg, State, page)
 
 import Api
 import Api.Data exposing (TermGraphResponse)
 import Api.Request.Default exposing (termsGraphGet)
 import Auth
+import Browser.Dom as Dom
+import Browser.Events as Events
 import Color
-import Element exposing (Element, centerX, el, text)
+import Element exposing (Element, text)
 import Force
 import Gen.Route as Route
 import Graph exposing (Edge, Graph, Node, NodeContext, NodeId)
@@ -15,17 +17,18 @@ import Problem exposing (isUnauthenticated)
 import Request exposing (Request)
 import Shared
 import Storage exposing (Storage)
+import Task
 import Translations.Labels exposing (loading, onError)
 import Translations.Titles exposing (home)
-import TypedSvg exposing (g, line, polygon, svg, title)
-import TypedSvg.Attributes exposing (class, color, fill, points, stroke, viewBox)
-import TypedSvg.Attributes.InPx exposing (strokeWidth, x1, x2, y1, y2)
-import TypedSvg.Core exposing (Attribute, Svg)
-import TypedSvg.Events exposing (onClick)
-import TypedSvg.Types exposing (Paint(..), px)
+import TypedSvg
+import TypedSvg.Attributes
+import TypedSvg.Attributes.InPx
+import TypedSvg.Core
+import TypedSvg.Types
 import UI.ColorPalette exposing (colorFromScale)
 import UI.Layout as Layout
 import View exposing (View)
+import Zoom exposing (OnZoom, Zoom)
 
 
 page : Shared.Model -> Request -> Page.With Model Msg
@@ -35,7 +38,7 @@ page shared _ =
             { init = init session
             , update = update shared.storage
             , view = view shared
-            , subscriptions = \_ -> Sub.none
+            , subscriptions = subscriptions
             }
         )
 
@@ -43,13 +46,40 @@ page shared _ =
 type alias Model =
     { session : Auth.User
     , state : State
+    , graphState : GraphState
     , selected : Maybe String
     }
 
 
+type GraphState
+    = Init (Graph Entity ())
+    | Ready ReadyState
+
+
+type alias ReadyState =
+    { graph : Graph Entity ()
+    , simulation : Force.State NodeId
+    , zoom : Zoom
+    , element : SVGElement
+    , showGraph : Bool
+    }
+
+
+type alias SVGElement =
+    { height : Float
+    , width : Float
+    , x : Float
+    , y : Float
+    }
+
+
+type alias Entity =
+    Force.Entity NodeId { value : String }
+
+
 type State
     = Loading
-    | Loaded TermGraphResponse
+    | Loaded
     | Errored String
 
 
@@ -60,14 +90,98 @@ init session =
 
 type Msg
     = TermsLoaded (Result Http.Error TermGraphResponse)
-    | TermSelected String
+    | ReceiveElementPosition (Result Dom.Error Dom.Element)
+    | Resize
+    | Tick
+    | ZoomMsg OnZoom
 
 
 update : Storage -> Msg -> Model -> ( Model, Cmd Msg )
 update storage msg model =
+    let
+        initNode : NodeContext String () -> NodeContext Entity ()
+        initNode ctx =
+            { node =
+                { label = Force.entity ctx.node.id ctx.node.label
+                , id = ctx.node.id
+                }
+            , incoming = ctx.incoming
+            , outgoing = ctx.outgoing
+            }
+
+        initSimulation : Graph Entity () -> Float -> Float -> Force.State NodeId
+        initSimulation graph width height =
+            let
+                link : { c | from : a, to : b } -> ( a, b )
+                link { from, to } =
+                    ( from, to )
+            in
+            Force.simulation
+                [ Force.links (List.map link (Graph.edges graph))
+                , Force.manyBodyStrength -150 (List.map .id (Graph.nodes graph))
+                , Force.collision 40 (List.map .id (Graph.nodes graph))
+                , Force.center (width / 2) (height / 2)
+                ]
+                |> Force.iterations 60
+
+        initZoom : SVGElement -> Zoom
+        initZoom element =
+            Zoom.init { width = element.width, height = element.height }
+                |> Zoom.scaleExtent 0.1 2
+
+        handleTick : ReadyState -> ( Model, Cmd Msg )
+        handleTick state =
+            let
+                ( newSimulation, list ) =
+                    Force.tick state.simulation (List.map .label (Graph.nodes state.graph))
+            in
+            ( { model
+                | graphState =
+                    Ready
+                        { state
+                            | graph = updateGraphWithList state.graph list
+                            , showGraph = True
+                            , simulation = newSimulation
+                        }
+              }
+            , Cmd.none
+            )
+
+        updateContextWithValue : NodeContext Entity () -> Entity -> NodeContext Entity ()
+        updateContextWithValue nodeCtx value =
+            let
+                node : Node Entity
+                node =
+                    nodeCtx.node
+            in
+            { nodeCtx | node = { node | label = value } }
+
+        updateGraphWithList : Graph Entity () -> List Entity -> Graph Entity ()
+        updateGraphWithList =
+            let
+                graphUpdater : Entity -> Maybe (NodeContext Entity ()) -> Maybe (NodeContext Entity ())
+                graphUpdater value =
+                    Maybe.map (\ctx -> updateContextWithValue ctx value)
+            in
+            List.foldr (\node graph -> Graph.update node.id (graphUpdater node) graph)
+    in
     case msg of
         TermsLoaded (Ok response) ->
-            ( { model | state = Loaded response }, Cmd.none )
+            let
+                graph : Graph String ()
+                graph =
+                    Graph.fromNodeLabelsAndEdgePairs response.terms (List.map tuple response.nodes)
+
+                tuple : List Int -> ( Int, Int )
+                tuple input =
+                    case input of
+                        [ a, b ] ->
+                            ( a, b )
+
+                        _ ->
+                            ( 0, 0 )
+            in
+            ( { model | state = Loaded, graphState = Init (Graph.mapContexts initNode graph) }, getElementPosition )
 
         TermsLoaded (Err err) ->
             if isUnauthenticated err then
@@ -76,41 +190,193 @@ update storage msg model =
             else
                 ( { model | state = Errored (Problem.toString err) }, Cmd.none )
 
-        TermSelected term ->
-            ( { model | selected = Just term }, Cmd.none )
+        ReceiveElementPosition (Ok { element }) ->
+            case model.graphState of
+                Ready state ->
+                    ( { model
+                        | graphState =
+                            Ready
+                                { element = element
+                                , graph = state.graph
+                                , showGraph = True
+                                , simulation =
+                                    initSimulation
+                                        state.graph
+                                        element.width
+                                        element.height
+                                , zoom = initZoom element
+                                }
+                      }
+                    , Cmd.none
+                    )
+
+                Init graph ->
+                    ( { model
+                        | graphState =
+                            Ready
+                                { element = element
+                                , graph = graph
+                                , showGraph = False
+                                , simulation =
+                                    initSimulation
+                                        graph
+                                        element.width
+                                        element.height
+                                , zoom = initZoom element
+                                }
+                      }
+                    , Cmd.none
+                    )
+
+        ReceiveElementPosition (Err _) ->
+            ( model, Cmd.none )
+
+        Resize ->
+            ( model, getElementPosition )
+
+        Tick ->
+            case model.graphState of
+                Ready state ->
+                    handleTick state
+
+                Init _ ->
+                    ( model, Cmd.none )
+
+        ZoomMsg zoomMsg ->
+            case model.graphState of
+                Ready state ->
+                    ( { model | graphState = Ready { state | zoom = Zoom.update zoomMsg state.zoom } }
+                    , Cmd.none
+                    )
+
+                Init _ ->
+                    ( model, Cmd.none )
 
 
 view : Shared.Model -> Model -> View Msg
 view shared model =
     { title = home shared.translations
-    , body = Layout.layout Route.Home_ shared (viewUser shared model)
+    , body = Layout.layout Route.Home_ shared (viewTerms shared model)
     }
 
 
-viewUser : Shared.Model -> Model -> List (Element Msg)
-viewUser shared model =
+viewTerms : Shared.Model -> Model -> List (Element Msg)
+viewTerms shared model =
     case model.state of
         Loading ->
             [ text (loading shared.translations) ]
 
-        Loaded response ->
-            case model.selected of
-                Just v ->
-                    [ el [ centerX ] (text v), graphView shared.window response ]
-
-                _ ->
-                    [ graphView shared.window response ]
+        Loaded ->
+            [ viewGraph model ]
 
         Errored reason ->
             [ text (onError shared.translations reason) ]
 
 
-loadTerms : Auth.User -> ( Model, Cmd Msg )
-loadTerms session =
-    ( { session = session, state = Loading, selected = Nothing }, Api.send TermsLoaded (termsGraphGet session.token) )
+elementId : String
+elementId =
+    "graph"
 
 
-linkElement : Graph Entity () -> Edge () -> Svg msg
+viewGraph : Model -> Element Msg
+viewGraph model =
+    let
+        zoomEvents : List (TypedSvg.Core.Attribute Msg)
+        zoomEvents =
+            case model.graphState of
+                Init _ ->
+                    []
+
+                Ready { zoom } ->
+                    Zoom.events zoom ZoomMsg
+
+        zoomTransformAttr : TypedSvg.Core.Attribute Msg
+        zoomTransformAttr =
+            case model.graphState of
+                Init _ ->
+                    TypedSvg.Attributes.class []
+
+                Ready { zoom } ->
+                    Zoom.transform zoom
+    in
+    Element.html
+        (TypedSvg.svg
+            [ TypedSvg.Attributes.id elementId
+            , TypedSvg.Attributes.width (TypedSvg.Types.Percent 100)
+            , TypedSvg.Attributes.height (TypedSvg.Types.Percent 100)
+            ]
+            [ TypedSvg.rect
+                (TypedSvg.Attributes.width (TypedSvg.Types.Percent 100)
+                    :: TypedSvg.Attributes.height (TypedSvg.Types.Percent 100)
+                    :: TypedSvg.Attributes.fill (TypedSvg.Types.Paint Color.white)
+                    :: TypedSvg.Attributes.cursor TypedSvg.Types.CursorMove
+                    :: zoomEvents
+                )
+                []
+            , TypedSvg.g
+                [ zoomTransformAttr ]
+                [ renderGraph model ]
+            ]
+        )
+
+
+renderGraph : Model -> TypedSvg.Core.Svg Msg
+renderGraph model =
+    case model.graphState of
+        Init _ ->
+            TypedSvg.Core.text ""
+
+        Ready { graph, showGraph } ->
+            if showGraph then
+                TypedSvg.g
+                    []
+                    [ TypedSvg.g [] (List.map (linkElement graph) (Graph.edges graph))
+                    , TypedSvg.g [] (List.map nodeElement (Graph.nodes graph))
+                    ]
+
+            else
+                TypedSvg.Core.text ""
+
+
+hexagon : ( Float, Float ) -> Float -> List (TypedSvg.Core.Attribute msg) -> (List (TypedSvg.Core.Svg msg) -> TypedSvg.Core.Svg msg)
+hexagon ( x, y ) size attrs =
+    let
+        angle : Float
+        angle =
+            2 * pi / 6
+
+        p : TypedSvg.Core.Attribute msg
+        p =
+            List.range 0 6
+                |> List.map toFloat
+                |> List.map (\a -> ( x + cos (a * angle) * size, y + sin (a * angle) * size ))
+                |> TypedSvg.Attributes.points
+    in
+    TypedSvg.polygon
+        (p :: attrs)
+
+
+nodeElement : Node Entity -> TypedSvg.Core.Svg Msg
+nodeElement node =
+    TypedSvg.g []
+        [ hexagon ( node.label.x, node.label.y )
+            8
+            [ TypedSvg.Attributes.fill (TypedSvg.Types.Paint (colorFromScale node.label.x)) ]
+            [ TypedSvg.title [] [ TypedSvg.Core.text node.label.value ] ]
+        , TypedSvg.text_
+            [ TypedSvg.Attributes.InPx.dx node.label.x
+            , TypedSvg.Attributes.InPx.dy (node.label.y + 14)
+            , TypedSvg.Attributes.alignmentBaseline TypedSvg.Types.AlignmentMiddle
+            , TypedSvg.Attributes.textAnchor TypedSvg.Types.AnchorMiddle
+            , TypedSvg.Attributes.InPx.fontSize 12
+            , TypedSvg.Attributes.fill (TypedSvg.Types.Paint Color.black)
+            , TypedSvg.Attributes.pointerEvents "none"
+            ]
+            [ TypedSvg.Core.text node.label.value ]
+        ]
+
+
+linkElement : Graph Entity () -> Edge () -> TypedSvg.Core.Svg msg
 linkElement graph edge =
     let
         retrieveEntity : Maybe { b | node : { a | label : Force.Entity Int { value : String } } } -> Force.Entity Int { value : String }
@@ -125,165 +391,52 @@ linkElement graph edge =
         target =
             retrieveEntity (Graph.get edge.to graph)
     in
-    line
-        [ strokeWidth 1
-        , stroke (Paint (colorFromScale source.x))
-        , x1 source.x
-        , y1 source.y
-        , x2 target.x
-        , y2 target.y
+    TypedSvg.line
+        [ TypedSvg.Attributes.InPx.strokeWidth 1
+        , TypedSvg.Attributes.stroke (TypedSvg.Types.Paint (colorFromScale source.x))
+        , TypedSvg.Attributes.InPx.x1 source.x
+        , TypedSvg.Attributes.InPx.y1 source.y
+        , TypedSvg.Attributes.InPx.x2 target.x
+        , TypedSvg.Attributes.InPx.y2 target.y
         ]
         []
 
 
-hexagon : ( Float, Float ) -> Float -> List (Attribute msg) -> (List (Svg msg) -> Svg msg)
-hexagon ( x, y ) size attrs =
+subscriptions : Model -> Sub Msg
+subscriptions model =
     let
-        angle : Float
-        angle =
-            2 * pi / 6
+        readySubscriptions : ReadyState -> Sub Msg
+        readySubscriptions { simulation, zoom } =
+            Sub.batch
+                [ Zoom.subscriptions zoom ZoomMsg
+                , if Force.isCompleted simulation then
+                    Sub.none
 
-        p : Attribute msg
-        p =
-            List.range 0 6
-                |> List.map toFloat
-                |> List.map (\a -> ( x + cos (a * angle) * size, y + sin (a * angle) * size ))
-                |> points
+                  else
+                    Events.onAnimationFrame (\_ -> Tick)
+                ]
     in
-    polygon
-        (p :: attrs)
+    Sub.batch
+        [ case model.graphState of
+            Init _ ->
+                Sub.none
 
-
-nodeSize : Float -> Entity -> Svg Msg
-nodeSize size node =
-    hexagon ( node.x, node.y )
-        size
-        [ fill (Paint (colorFromScale node.x))
-        , onClick (TermSelected node.value)
+            Ready state ->
+                readySubscriptions state
+        , Events.onResize (\_ _ -> Resize)
         ]
-        [ title [ color (Color.rgb255 0 0 0) ] [ TypedSvg.Core.text node.value ] ]
 
 
-nodeElement : Node Entity -> Svg Msg
-nodeElement node =
-    nodeSize 8 node.label
-
-
-textElement : Float -> Float -> Node Entity -> Svg Msg
-textElement width height node =
+loadTerms : Auth.User -> ( Model, Cmd Msg )
+loadTerms session =
     let
-        x : Float
-        x =
-            if node.label.x < width / 2 then
-                node.label.x - toFloat (String.length node.label.value) * 7 - 10
-
-            else
-                node.label.x + 10
-
-        y : Float
-        y =
-            if node.label.y < height / 2 then
-                node.label.y - 5
-
-            else
-                node.label.y + 10
-    in
-    TypedSvg.text_
-        [ TypedSvg.Attributes.x (px x)
-        , TypedSvg.Attributes.y (px y)
-        , TypedSvg.Attributes.fontFamily [ "monospace" ]
-        , TypedSvg.Attributes.fontSize (px 12)
-        ]
-        [ TypedSvg.Core.text node.label.value ]
-
-
-type alias Entity =
-    Force.Entity NodeId { value : String }
-
-
-updateGraphWithList : Graph Entity () -> List Entity -> Graph Entity ()
-updateGraphWithList =
-    let
-        graphUpdater : Entity -> Maybe (NodeContext Entity ()) -> Maybe (NodeContext Entity ())
-        graphUpdater value =
-            Maybe.map (\ctx -> updateContextWithValue ctx value)
-    in
-    List.foldr (\node graph -> Graph.update node.id (graphUpdater node) graph)
-
-
-updateContextWithValue : NodeContext Entity () -> Entity -> NodeContext Entity ()
-updateContextWithValue nodeCtx value =
-    let
-        node : Node Entity
-        node =
-            nodeCtx.node
-    in
-    { nodeCtx | node = { node | label = value } }
-
-
-tuple : List Int -> ( Int, Int )
-tuple input =
-    case input of
-        [ a, b ] ->
-            ( a, b )
-
-        _ ->
-            ( 0, 0 )
-
-
-graphView : Shared.Window -> TermGraphResponse -> Element Msg
-graphView window response =
-    let
-        w : Float
-        w =
-            toFloat (min window.width 1024)
-
-        h : Float
-        h =
-            toFloat 480
-
-        graph : Graph (Force.Entity Int { value : String }) ()
+        graph : Graph Entity ()
         graph =
-            Graph.mapContexts
-                (\({ incoming, outgoing } as ctx) ->
-                    { incoming = incoming
-                    , outgoing = outgoing
-                    , node = { label = Force.entity ctx.node.id ctx.node.label, id = ctx.node.id }
-                    }
-                )
-                (Graph.fromNodeLabelsAndEdgePairs response.terms (List.map tuple response.nodes))
-
-        links : List { source : NodeId, target : NodeId, distance : Float, strength : Maybe a }
-        links =
-            graph
-                |> Graph.edges
-                |> List.map
-                    (\{ from, to } ->
-                        { source = from
-                        , target = to
-                        , distance = w / 12
-                        , strength = Nothing
-                        }
-                    )
-
-        forces : List (Force.Force NodeId)
-        forces =
-            [ Force.customLinks 1 links
-            , Force.manyBodyStrength -80 (List.map .id (Graph.nodes graph))
-            , Force.center (w / 2) (h / 2)
-            ]
-
-        model : Graph Entity ()
-        model =
-            Graph.nodes graph
-                |> List.map .label
-                |> Force.computeSimulation (Force.simulation forces)
-                |> updateGraphWithList graph
+            Graph.fromNodeLabelsAndEdgePairs [] []
     in
-    Element.html
-        (svg [ viewBox 0 0 w h ]
-            [ g [ class [ "links" ] ] (List.map (linkElement model) (Graph.edges model))
-            , g [ class [ "nodes" ] ] (List.map nodeElement (Graph.nodes model))
-            , g [ class [ "texts" ] ] (List.map (textElement w h) (Graph.nodes model))
-            ]
-        )
+    ( { session = session, state = Loading, selected = Nothing, graphState = Init graph }, Api.send TermsLoaded (termsGraphGet session.token) )
+
+
+getElementPosition : Cmd Msg
+getElementPosition =
+    Task.attempt ReceiveElementPosition (Dom.getElement elementId)
