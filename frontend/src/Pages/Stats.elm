@@ -4,7 +4,6 @@ import Api
 import Api.Data exposing (MediaStatsResponse, StatsResponse)
 import Api.Request.Default exposing (snippetsStatsGet)
 import Auth
-import Color
 import Element exposing (Element, text)
 import Forms.SnippetForm exposing (stringFromMedia)
 import Gen.Route as Route
@@ -18,13 +17,14 @@ import Shared
 import Storage exposing (Storage)
 import Translations.Labels exposing (loading, onError)
 import Translations.Titles exposing (stats)
-import TypedSvg exposing (g, svg, text_)
-import TypedSvg.Attributes exposing (stroke, textAnchor, transform)
-import TypedSvg.Attributes.InPx exposing (height, width)
-import TypedSvg.Core exposing (Svg)
-import TypedSvg.Types exposing (AnchorAlignment(..), Paint(..), Transform(..))
+import TypedSvg
+import TypedSvg.Attributes
+import TypedSvg.Attributes.InEm
+import TypedSvg.Attributes.InPx
+import TypedSvg.Core
+import TypedSvg.Types
 import UI.ColorPalette exposing (colorFromScale)
-import UI.Layout as Layout
+import UI.Layout as Layout exposing (scaled)
 import View exposing (View)
 
 
@@ -97,9 +97,13 @@ viewStats shared model =
 pieChart : Shared.Model -> List MediaStatsResponse -> Element msg
 pieChart shared media =
     let
+        width : Float
+        width =
+            toFloat (min shared.window.width 1024 - 40)
+
         radius : Float
         radius =
-            toFloat (min shared.window.width 1024 // 2)
+            width / 8.0
 
         pieData : List Shape.Arc
         pieData =
@@ -107,34 +111,46 @@ pieChart shared media =
                 |> List.map (\v -> toFloat v.count)
                 |> Shape.pie
                     { defaultPieConfig
-                        | innerRadius = radius / 3.0
-                        , outerRadius = radius / 3.0 + 20.0
+                        | innerRadius = radius - radius * 0.1
+                        , outerRadius = radius
                         , padAngle = 0.02
                         , cornerRadius = 8
                         , sortingFn = \_ _ -> EQ
                     }
 
-        makeSlice : Int -> Shape.Arc -> Svg msg
+        makeSlice : Int -> Shape.Arc -> TypedSvg.Core.Svg msg
         makeSlice index datum =
-            Path.element (Shape.arc datum) [ TypedSvg.Attributes.fill (Paint (colorFromScale (toFloat (index + 1) * 120.0))), stroke (Paint Color.white) ]
+            Path.element (Shape.arc datum)
+                [ TypedSvg.Attributes.fill (TypedSvg.Types.Paint (colorFromScale (toFloat (index + 1) * 120.0)))
+                ]
 
-        makeLabel : Shape.Arc -> MediaStatsResponse -> Svg msg
+        makeLabel : Shape.Arc -> MediaStatsResponse -> TypedSvg.Core.Svg msg
         makeLabel slice response =
             let
                 ( x, y ) =
-                    Shape.centroid { slice | innerRadius = radius / 3.0 + 60.0, outerRadius = radius / 3.0 + 80.0 }
+                    Shape.centroid { slice | innerRadius = radius + 10.0, outerRadius = radius + 10.0 }
+
+                textAnchor : TypedSvg.Types.AnchorAlignment
+                textAnchor =
+                    if x < 0 then
+                        TypedSvg.Types.AnchorEnd
+
+                    else
+                        TypedSvg.Types.AnchorStart
             in
-            text_
-                [ transform [ Translate x y ]
-                , textAnchor AnchorMiddle
+            TypedSvg.text_
+                [ TypedSvg.Attributes.transform [ TypedSvg.Types.Translate x y ]
+                , TypedSvg.Attributes.InEm.dy 0.35
+                , TypedSvg.Attributes.textAnchor textAnchor
+                , TypedSvg.Attributes.InPx.fontSize (toFloat (scaled -1))
                 ]
-                [ TypedSvg.Core.text (stringFromMedia shared.translations response.media ++ "(" ++ String.fromInt response.count ++ ")") ]
+                [ TypedSvg.Core.text (stringFromMedia shared.translations response.media ++ " (" ++ String.fromInt response.count ++ ")") ]
     in
     Element.html
-        (svg [ width (radius * 2), height (radius * 2) ]
-            [ g [ transform [ Translate radius radius ] ]
-                [ g [] (List.indexedMap makeSlice pieData)
-                , g [] (List.map2 makeLabel pieData media)
+        (TypedSvg.svg [ TypedSvg.Attributes.InPx.width width, TypedSvg.Attributes.InPx.height (radius * 2 + 90) ]
+            [ TypedSvg.g [ TypedSvg.Attributes.transform [ TypedSvg.Types.Translate (radius + 80) (radius + 40) ] ]
+                [ TypedSvg.g [] (List.indexedMap makeSlice pieData)
+                , TypedSvg.g [] (List.map2 makeLabel pieData media)
                 ]
             ]
         )
