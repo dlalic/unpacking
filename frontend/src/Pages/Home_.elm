@@ -267,7 +267,7 @@ viewTerms shared model =
             [ text (loading shared.translations) ]
 
         Loaded ->
-            [ viewGraph model ]
+            [ viewGraph shared.window model ]
 
         Errored reason ->
             [ text (onError shared.translations reason) ]
@@ -278,8 +278,8 @@ elementId =
     "graph"
 
 
-viewGraph : Model -> Element Msg
-viewGraph model =
+viewGraph : Shared.Window -> Model -> Element Msg
+viewGraph window model =
     let
         zoomEvents : List (TypedSvg.Core.Attribute Msg)
         zoomEvents =
@@ -302,8 +302,8 @@ viewGraph model =
     Element.html
         (TypedSvg.svg
             [ TypedSvg.Attributes.id elementId
-            , TypedSvg.Attributes.width (TypedSvg.Types.Percent 100)
-            , TypedSvg.Attributes.height (TypedSvg.Types.Percent 100)
+            , TypedSvg.Attributes.InPx.width (toFloat (min window.width 1024 - 40))
+            , TypedSvg.Attributes.InPx.height (toFloat window.height / 2)
             ]
             [ TypedSvg.rect
                 (TypedSvg.Attributes.width (TypedSvg.Types.Percent 100)
