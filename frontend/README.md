@@ -6,18 +6,19 @@
 
 ```
 yarn
-```
-
-## Generate OpenAPI client
-
-```
-yarn generate
+yarn gen
 ```
 
 ## Run
 
 ```
 yarn dev
+```
+
+## Fix
+
+```
+yarn fix
 ```
 
 ## Format
