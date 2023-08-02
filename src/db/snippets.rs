@@ -119,8 +119,8 @@ pub fn search(
              snippets::dsl::text,
              snippets::dsl::media,
              snippets::dsl::link,
-             diesel::dsl::sql::<Array<Record<(diesel::sql_types::Uuid, diesel::sql_types::Text)>>>("coalesce(array_agg((terms.id, terms.name)) filter (where terms.id is not null), '{}')"),
-             diesel::dsl::sql::<Array<Record<(diesel::sql_types::Uuid, diesel::sql_types::Text)>>>("coalesce(array_agg((authors.id, authors.name)) filter (where authors.id is not null), '{}')"),
+             diesel::dsl::sql::<Array<Record<(diesel::sql_types::Uuid, diesel::sql_types::Text)>>>("coalesce(array_agg(distinct (terms.id, terms.name)) filter (where terms.id is not null), '{}')"),
+             diesel::dsl::sql::<Array<Record<(diesel::sql_types::Uuid, diesel::sql_types::Text)>>>("coalesce(array_agg(distinct (authors.id, authors.name)) filter (where authors.id is not null), '{}')"),
             )
         )
         .group_by(snippets::dsl::id)
