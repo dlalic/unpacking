@@ -1,12 +1,12 @@
 module Pages.Snippets exposing (Model, Msg, State, page)
 
 import Api
-import Api.Data exposing (AuthorResponse, Media(..), Role(..), SnippetResponse, TermResponse, UpdateSnippet)
-import Api.Request.Default exposing (deleteSnippets, readAllAuthors, readAllSnippets, readAllTerms, updateSnippets)
+import Api.Data exposing (AuthorResponse, Media(..), Role(..), SnippetResponse, SnippetSearchResponse, TermResponse, UpdateSnippet)
+import Api.Request.Default exposing (deleteSnippets, readAllAuthors, readAllTerms, searchSnippets, updateSnippets)
 import Auth
 import Common exposing (uuidFromString)
 import Dict
-import Element exposing (Element, height, image, paragraph, px, text, width)
+import Element exposing (Color, Element, height, image, paragraph, px, row, spacing, text, width)
 import Element.Font as Font
 import Embed.Youtube
 import Embed.Youtube.Thumbnail as Thumb
@@ -25,8 +25,9 @@ import Translations.Buttons exposing (delete, edit, newSnippet, source)
 import Translations.Forms as Forms
 import Translations.Labels exposing (loading, onError, videoThumbnail)
 import Translations.Titles exposing (snippets)
-import UI.Button exposing (defaultButton)
+import UI.Button exposing (defaultButton, viewButton)
 import UI.Card exposing (keyedCard)
+import UI.ColorPalette exposing (darkGray, green)
 import UI.Dialog exposing (defaultDialog)
 import UI.Dropdown exposing (Dropdown, dropdown, initModel, updateModel)
 import UI.Layout as Layout
@@ -58,23 +59,34 @@ type alias Model =
     , authors : Maybe (List AuthorResponse)
     , authorsDropdown : Dropdown AuthorResponse
     , termsDropdown : Dropdown TermResponse
+    , currentPage : Int
     }
 
 
 type State
     = Loading
-    | Loaded (List SnippetResponse)
+    | Loaded SnippetSearchResponse
     | LoadedEdit ( List TermResponse, List AuthorResponse )
     | Errored String
 
 
 init : Auth.User -> ( Model, Cmd Msg )
 init session =
-    loadSnippets session
+    loadSnippets
+        { session = session
+        , state = Loading
+        , toUpdate = Nothing
+        , toDelete = Nothing
+        , authors = Nothing
+        , terms = Nothing
+        , authorsDropdown = initModel
+        , termsDropdown = initModel
+        , currentPage = 1
+        }
 
 
 type Msg
-    = SnippetsLoaded (Result Http.Error (List SnippetResponse))
+    = SnippetsLoaded (Result Http.Error SnippetSearchResponse)
     | SnippetDeleted (Result Http.Error ())
     | SnippetUpdated (Result Http.Error ())
     | ClickedNew
@@ -88,13 +100,14 @@ type Msg
     | ClickedDelete Uuid
     | ClickedCancelDelete
     | ClickedSubmitDelete
+    | ClickedPage Int
 
 
 update : Request -> Storage -> Msg -> Model -> ( Model, Cmd Msg )
 update req storage msg model =
     case msg of
-        SnippetsLoaded (Ok list) ->
-            ( { model | state = Loaded list }, Cmd.none )
+        SnippetsLoaded (Ok result) ->
+            ( { model | state = Loaded result }, Cmd.none )
 
         SnippetsLoaded (Err err) ->
             if isUnauthenticated err then
@@ -156,7 +169,7 @@ update req storage msg model =
                     ( { model | termsDropdown = updateModel changeEvent model.termsDropdown }, Cmd.none )
 
         ClickedCancelEdit ->
-            loadSnippets model.session
+            loadSnippets model
 
         ClickedSubmitEdit (Ok input) ->
             let
@@ -186,7 +199,7 @@ update req storage msg model =
                     , terms = List.concatMap uuidFromString (Dict.keys valid.terms)
                     }
             in
-            updateSnippet model.session valid.id updatedSnippet
+            updateSnippet model valid.id updatedSnippet
 
         ClickedSubmitEdit (Err list) ->
             case model.toUpdate of
@@ -197,7 +210,7 @@ update req storage msg model =
                     ( model, Cmd.none )
 
         SnippetUpdated (Ok _) ->
-            loadSnippets model.session
+            loadSnippets model
 
         SnippetUpdated (Err err) ->
             if isUnauthenticated err then
@@ -215,13 +228,13 @@ update req storage msg model =
         ClickedSubmitDelete ->
             case model.toDelete of
                 Just uuid ->
-                    deleteSnippet model.session uuid
+                    deleteSnippet model uuid
 
                 Nothing ->
                     ( model, Cmd.none )
 
         SnippetDeleted (Ok _) ->
-            loadSnippets model.session
+            loadSnippets model
 
         SnippetDeleted (Err err) ->
             if isUnauthenticated err then
@@ -229,6 +242,9 @@ update req storage msg model =
 
             else
                 ( { model | state = Errored (Problem.toString err) }, Cmd.none )
+
+        ClickedPage i ->
+            loadSnippets { model | currentPage = i }
 
 
 view : Shared.Model -> Model -> View Msg
@@ -244,16 +260,16 @@ viewSnippets shared model =
         Loading ->
             [ text (loading shared.translations) ]
 
-        Loaded snippets ->
+        Loaded response ->
             case ( model.session.role, model.toUpdate, model.toDelete ) of
                 ( RoleAdmin, _, Just _ ) ->
                     [ defaultDialog shared.translations ClickedCancelDelete ClickedSubmitDelete ]
 
                 ( RoleAdmin, _, _ ) ->
-                    defaultButton (newSnippet shared.translations) ClickedNew :: List.map (viewSnippet shared True) snippets
+                    defaultButton (newSnippet shared.translations) ClickedNew :: List.map (viewSnippet shared True) response.snippets ++ [ viewPagination model.currentPage response.pages ]
 
                 ( RoleUser, _, _ ) ->
-                    List.map (viewSnippet shared False) snippets
+                    List.map (viewSnippet shared False) response.snippets ++ [ viewPagination model.currentPage response.pages ]
 
         LoadedEdit ( terms, authors ) ->
             case ( model.session.role, model.toUpdate ) of
@@ -317,6 +333,25 @@ viewSnippet shared canEdit snippet =
     keyedCard { title = authors, rightLabel = stringFromMedia shared.translations snippet.media, body = body, onClick = Nothing, buttons = buttons } snippet.id
 
 
+viewPagination : Int -> Int -> Element Msg
+viewPagination currentPage pages =
+    let
+        pageButton : Int -> Element Msg
+        pageButton i =
+            let
+                color : Color
+                color =
+                    if i == currentPage then
+                        green
+
+                    else
+                        darkGray
+            in
+            viewButton { title = String.fromInt i, action = Just (ClickedPage i), color = Just color }
+    in
+    row [ spacing 10 ] (defaultButton " « " (ClickedPage 1) :: List.map (\v -> pageButton v) (List.range 1 pages) ++ [ defaultButton " » " (ClickedPage pages) ])
+
+
 editSnippet : Shared.Model -> EditSnippet -> Model -> List AuthorResponse -> List TermResponse -> Element Msg
 editSnippet shared snippet model authors terms =
     let
@@ -335,25 +370,21 @@ editSnippet shared snippet model authors terms =
     editForm shared.translations snippet aDropdown tDropdown Edit ClickedCancelEdit submit
 
 
-deleteSnippet : Auth.User -> Uuid -> ( Model, Cmd Msg )
-deleteSnippet session uuid =
-    ( { session = session, state = Loading, toUpdate = Nothing, toDelete = Nothing, authors = Nothing, terms = Nothing, authorsDropdown = initModel, termsDropdown = initModel }
-    , Api.send SnippetDeleted (deleteSnippets uuid session.token)
+deleteSnippet : Model -> Uuid -> ( Model, Cmd Msg )
+deleteSnippet model uuid =
+    ( { model | state = Loading, toDelete = Nothing }, Api.send SnippetDeleted (deleteSnippets uuid model.session.token) )
+
+
+updateSnippet : Model -> Uuid -> UpdateSnippet -> ( Model, Cmd Msg )
+updateSnippet model id snippet =
+    ( { model | state = Loading, toUpdate = Nothing, authors = Nothing, terms = Nothing, authorsDropdown = initModel, termsDropdown = initModel }
+    , Api.send SnippetUpdated (updateSnippets id snippet model.session.token)
     )
 
 
-updateSnippet : Auth.User -> Uuid -> UpdateSnippet -> ( Model, Cmd Msg )
-updateSnippet session id snippet =
-    ( { session = session, state = Loading, toUpdate = Nothing, toDelete = Nothing, authors = Nothing, terms = Nothing, authorsDropdown = initModel, termsDropdown = initModel }
-    , Api.send SnippetUpdated (updateSnippets id snippet session.token)
-    )
-
-
-loadSnippets : Auth.User -> ( Model, Cmd Msg )
-loadSnippets session =
-    ( { session = session, state = Loading, toUpdate = Nothing, toDelete = Nothing, authors = Nothing, terms = Nothing, authorsDropdown = initModel, termsDropdown = initModel }
-    , Api.send SnippetsLoaded (readAllSnippets session.token)
-    )
+loadSnippets : Model -> ( Model, Cmd Msg )
+loadSnippets model =
+    ( { model | state = Loading }, Api.send SnippetsLoaded (searchSnippets model.currentPage Nothing model.session.token) )
 
 
 editSnippetFromSnippet : SnippetResponse -> EditSnippet

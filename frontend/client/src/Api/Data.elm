@@ -27,6 +27,7 @@ module Api.Data exposing
     , MediaStatsResponse
     , Role(..), roleVariants
     , SnippetResponse
+    , SnippetSearchResponse
     , SnippetTermResponse
     , StatsResponse
     , TermGraphResponse
@@ -51,6 +52,7 @@ module Api.Data exposing
     , encodeMediaStatsResponse
     , encodeRole
     , encodeSnippetResponse
+    , encodeSnippetSearchResponse
     , encodeSnippetTermResponse
     , encodeStatsResponse
     , encodeTermGraphResponse
@@ -75,6 +77,7 @@ module Api.Data exposing
     , mediaStatsResponseDecoder
     , roleDecoder
     , snippetResponseDecoder
+    , snippetSearchResponseDecoder
     , snippetTermResponseDecoder
     , statsResponseDecoder
     , termGraphResponseDecoder
@@ -240,6 +243,12 @@ type alias SnippetResponse =
     , link : Maybe String
     , authors : List (AuthorResponse)
     , terms : List (SnippetTermResponse)
+    }
+
+
+type alias SnippetSearchResponse =
+    { pages : Int
+    , snippets : List (SnippetResponse)
     }
 
 
@@ -643,6 +652,27 @@ encodeSnippetResponsePairs model =
             , maybeEncode "link" Json.Encode.string model.link
             , encode "authors" (Json.Encode.list encodeAuthorResponse) model.authors
             , encode "terms" (Json.Encode.list encodeSnippetTermResponse) model.terms
+            ]
+    in
+    pairs
+
+
+encodeSnippetSearchResponse : SnippetSearchResponse -> Json.Encode.Value
+encodeSnippetSearchResponse =
+    encodeObject << encodeSnippetSearchResponsePairs
+
+
+encodeSnippetSearchResponseWithTag : ( String, String ) -> SnippetSearchResponse -> Json.Encode.Value
+encodeSnippetSearchResponseWithTag (tagField, tag) model =
+    encodeObject (encodeSnippetSearchResponsePairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeSnippetSearchResponsePairs : SnippetSearchResponse -> List EncodedField
+encodeSnippetSearchResponsePairs model =
+    let
+        pairs =
+            [ encode "pages" Json.Encode.int model.pages
+            , encode "snippets" (Json.Encode.list encodeSnippetResponse) model.snippets
             ]
     in
     pairs
@@ -1066,6 +1096,13 @@ snippetResponseDecoder =
         |> maybeDecode "link" Json.Decode.string Nothing
         |> decode "authors" (Json.Decode.list authorResponseDecoder) 
         |> decode "terms" (Json.Decode.list snippetTermResponseDecoder) 
+
+
+snippetSearchResponseDecoder : Json.Decode.Decoder SnippetSearchResponse
+snippetSearchResponseDecoder =
+    Json.Decode.succeed SnippetSearchResponse
+        |> decode "pages" Json.Decode.int 
+        |> decode "snippets" (Json.Decode.list snippetResponseDecoder) 
 
 
 snippetTermResponseDecoder : Json.Decode.Decoder SnippetTermResponse

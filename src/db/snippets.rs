@@ -1,11 +1,24 @@
 use crate::error::Error;
 use crate::models::{AuthorSnippet, Snippet, TermSnippet};
 use crate::schema::{authors, authors_snippets, snippets, terms, terms_snippets};
-use std::collections::HashMap;
 
 use crate::models::enums::Media;
-use diesel::{Connection, ExpressionMethods, PgConnection, QueryDsl, RunQueryDsl};
+use diesel::pg::sql_types::Record;
+use diesel::sql_types::Array;
+use diesel::{
+    Connection, ExpressionMethods, JoinOnDsl, PgConnection, QueryDsl, Queryable, RunQueryDsl,
+};
 use uuid::Uuid;
+
+#[derive(Queryable, Debug)]
+pub struct SnippetWithRelated {
+    pub id: Uuid,
+    pub text: String,
+    pub media: Media,
+    pub link: Option<String>,
+    pub terms: Vec<(Uuid, String)>,
+    pub authors: Vec<(Uuid, String)>,
+}
 
 pub fn delete(id: Uuid, conn: &mut PgConnection) -> Result<usize, Error> {
     conn.transaction::<_, Error, _>(|conn| {
@@ -71,69 +84,58 @@ pub fn insert(
     })
 }
 
-pub fn select_all(conn: &mut PgConnection) -> Result<Vec<Snippet>, Error> {
-    snippets::dsl::snippets
-        .order(snippets::dsl::created_at.desc())
-        .load(conn)
-        .map_err(Error::from)
+pub fn count(term_id: Option<Uuid>, page_size: i64, conn: &mut PgConnection) -> Result<i64, Error> {
+    let count: i64 = match term_id {
+        None => snippets::dsl::snippets
+            .count()
+            .get_result(conn)
+            .map_err(Error::from)?,
+        Some(id) => snippets::dsl::snippets
+            .left_outer_join(
+                terms_snippets::dsl::terms_snippets
+                    .on(terms_snippets::dsl::snippet_id.eq(snippets::dsl::id)),
+            )
+            .filter(terms_snippets::dsl::term_id.eq(id))
+            .count()
+            .get_result(conn)
+            .map_err(Error::from)?,
+    };
+    Ok(count / page_size + (count % page_size).signum())
 }
 
-pub fn select_terms(conn: &mut PgConnection) -> Result<HashMap<Uuid, Vec<(Uuid, String)>>, Error> {
-    #[derive(Debug, Queryable)]
-    struct SnippetTerm {
-        pub snippet_id: Uuid,
-        pub term_id: Uuid,
-        pub name: String,
-    }
-    let snippet_terms = terms::dsl::terms
-        .inner_join(terms_snippets::dsl::terms_snippets)
-        .select((
-            terms_snippets::dsl::snippet_id,
-            terms::dsl::id,
-            terms::dsl::name,
-        ))
-        .load::<SnippetTerm>(conn)
-        .map_err(Error::from)?;
-    let result: HashMap<Uuid, Vec<(Uuid, String)>> =
-        snippet_terms
-            .into_iter()
-            .fold(HashMap::new(), |mut hmap, v| {
-                hmap.entry(v.snippet_id)
-                    .or_insert(Vec::new())
-                    .push((v.term_id, v.name));
-                hmap
-            });
-    Ok(result)
-}
-
-pub fn select_authors(
+pub fn search(
+    term_id: Option<Uuid>,
+    limit: Option<i64>,
+    offset: Option<i64>,
     conn: &mut PgConnection,
-) -> Result<HashMap<Uuid, Vec<(Uuid, String)>>, Error> {
-    #[derive(Debug, Queryable)]
-    struct SnippetAuthor {
-        pub snippet_id: Uuid,
-        pub author_id: Uuid,
-        pub name: String,
+) -> Result<Vec<SnippetWithRelated>, Error> {
+    let mut query = snippets::dsl::snippets
+        .left_outer_join(terms_snippets::dsl::terms_snippets.on(terms_snippets::dsl::snippet_id.eq(snippets::dsl::id)))
+        .left_outer_join(terms::dsl::terms.on(terms::dsl::id.eq(terms_snippets::dsl::term_id)))
+        .left_outer_join(authors_snippets::dsl::authors_snippets.on(authors_snippets::dsl::snippet_id.eq(snippets::dsl::id)))
+        .left_outer_join(authors::dsl::authors.on(authors::dsl::id.eq(authors_snippets::dsl::author_id)))
+        .select(
+            (snippets::dsl::id,
+             snippets::dsl::text,
+             snippets::dsl::media,
+             snippets::dsl::link,
+             diesel::dsl::sql::<Array<Record<(diesel::sql_types::Uuid, diesel::sql_types::Text)>>>("coalesce(array_agg((terms.id, terms.name)) filter (where terms.id is not null), '{}')"),
+             diesel::dsl::sql::<Array<Record<(diesel::sql_types::Uuid, diesel::sql_types::Text)>>>("coalesce(array_agg((authors.id, authors.name)) filter (where authors.id is not null), '{}')"),
+            )
+        )
+        .group_by(snippets::dsl::id)
+        .order(snippets::dsl::created_at.desc())
+        .into_boxed();
+    if let Some(id) = term_id {
+        query = query.filter(terms_snippets::dsl::term_id.eq(id));
     }
-    let snippet_authors = authors::dsl::authors
-        .inner_join(authors_snippets::dsl::authors_snippets)
-        .select((
-            authors_snippets::dsl::snippet_id,
-            authors::dsl::id,
-            authors::dsl::name,
-        ))
-        .load::<SnippetAuthor>(conn)
-        .map_err(Error::from)?;
-    let result: HashMap<Uuid, Vec<(Uuid, String)>> =
-        snippet_authors
-            .into_iter()
-            .fold(HashMap::new(), |mut hmap, v| {
-                hmap.entry(v.snippet_id)
-                    .or_insert(Vec::new())
-                    .push((v.author_id, v.name));
-                hmap
-            });
-    Ok(result)
+    if let Some(n) = limit {
+        query = query.limit(n);
+    }
+    if let Some(n) = offset {
+        query = query.offset(n);
+    }
+    query.load(conn).map_err(Error::from)
 }
 
 #[allow(clippy::too_many_arguments)]
