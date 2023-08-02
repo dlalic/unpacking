@@ -27,6 +27,7 @@ module Api.Request.Default exposing
     , readAllTranslations
     , readAllUsers
     , readUsers
+    , searchSnippets
     , snippetsStatsGet
     , termsGraphGet
     , updateSnippets
@@ -220,6 +221,20 @@ readUsers id_path auth_token =
         []
         Nothing
         Api.Data.userResponseDecoder
+        |> Api.withBearerToken auth_token
+
+
+
+searchSnippets : Int -> Maybe Uuid -> String -> Api.Request Api.Data.SnippetSearchResponse
+searchSnippets page_query termId_query auth_token =
+    Api.request
+        "GET"
+        "/snippets/search"
+        []
+        [ ( "term_id", Maybe.map Uuid.toString termId_query ), ( "page", Just <| String.fromInt page_query ) ]
+        []
+        Nothing
+        Api.Data.snippetSearchResponseDecoder
         |> Api.withBearerToken auth_token
 
 

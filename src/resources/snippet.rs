@@ -3,9 +3,11 @@ use crate::error::Error;
 use crate::models::Snippet;
 use crate::resources::auth::{AuthenticationStatus, Permission};
 
+use crate::db::snippets::{count, SnippetWithRelated};
 use crate::models::enums::Media;
 use crate::resources::validation::snippets::MIN_TEXT_LENGTH;
 use diesel::PgConnection;
+use gotham_derive::{StateData, StaticResponseExtender};
 use gotham_restful::gotham::hyper::Method;
 use gotham_restful::*;
 use openapi_type::OpenapiType;
@@ -13,9 +15,17 @@ use serde_derive::{Deserialize, Serialize};
 use uuid::Uuid;
 use validator::Validate;
 
+pub const PAGE_SIZE: i64 = 20;
+
 #[derive(Resource)]
-#[resource(create, read_all, update, delete)]
+#[resource(create, read_all, search, update, delete)]
 pub struct Resource;
+
+#[derive(Deserialize, StateData, StaticResponseExtender, OpenapiType, Clone, Debug)]
+pub struct SnippetQueryStringExtractor {
+    term_id: Option<Uuid>,
+    page: i64,
+}
 
 #[derive(Serialize, Deserialize, OpenapiType, Validate)]
 pub struct CreateSnippet {
@@ -45,11 +55,11 @@ struct AuthorResponse {
     pub name: String,
 }
 
-impl From<&(Uuid, String)> for AuthorResponse {
-    fn from(tuple: &(Uuid, String)) -> Self {
+impl From<(Uuid, String)> for AuthorResponse {
+    fn from(tuple: (Uuid, String)) -> Self {
         Self {
             id: tuple.0,
-            name: tuple.1.to_owned(),
+            name: tuple.1,
         }
     }
 }
@@ -60,11 +70,11 @@ struct SnippetTermResponse {
     pub name: String,
 }
 
-impl From<&(Uuid, String)> for SnippetTermResponse {
-    fn from(tuple: &(Uuid, String)) -> Self {
+impl From<(Uuid, String)> for SnippetTermResponse {
+    fn from(tuple: (Uuid, String)) -> Self {
         Self {
             id: tuple.0,
-            name: tuple.1.to_owned(),
+            name: tuple.1,
         }
     }
 }
@@ -79,19 +89,29 @@ struct SnippetResponse {
     pub terms: Vec<SnippetTermResponse>,
 }
 
-impl From<(Snippet, Vec<SnippetTermResponse>, Vec<AuthorResponse>)> for SnippetResponse {
-    fn from(input: (Snippet, Vec<SnippetTermResponse>, Vec<AuthorResponse>)) -> Self {
-        let snippet = input.0;
-        let terms = input.1;
-        let authors = input.2;
-        let (id, text, media, link, _, _) = snippet.dissolve();
+#[derive(Serialize, OpenapiType)]
+struct SnippetSearchResponse {
+    pub pages: i64,
+    pub snippets: Vec<SnippetResponse>,
+}
+
+impl From<SnippetWithRelated> for SnippetResponse {
+    fn from(snippet: SnippetWithRelated) -> Self {
         Self {
-            id,
-            text,
-            media,
-            link,
-            terms,
-            authors,
+            id: snippet.id,
+            text: snippet.text,
+            media: snippet.media,
+            link: snippet.link,
+            terms: snippet
+                .terms
+                .into_iter()
+                .map(SnippetTermResponse::from)
+                .collect(),
+            authors: snippet
+                .authors
+                .into_iter()
+                .map(AuthorResponse::from)
+                .collect(),
         }
     }
 }
@@ -121,28 +141,34 @@ fn read_all(
     conn: &mut PgConnection,
 ) -> Result<Vec<SnippetResponse>, Error> {
     auth.ok()?;
-    let snippets = snippets::select_all(conn)?;
-    let snippet_terms = snippets::select_terms(conn)?;
-    let snippet_authors = snippets::select_authors(conn)?;
-    let results = snippets
-        .into_iter()
-        .map(|snippet| {
-            let terms = snippet_terms
-                .get(snippet.id())
-                .into_iter()
-                .flatten()
-                .map(SnippetTermResponse::from)
-                .collect();
-            let authors = snippet_authors
-                .get(snippet.id())
-                .into_iter()
-                .flatten()
-                .map(AuthorResponse::from)
-                .collect();
-            SnippetResponse::from((snippet, terms, authors))
-        })
-        .collect();
-    Ok(results)
+    let result = load_snippets(None, None, None, conn)?;
+    Ok(result)
+}
+
+fn load_snippets(
+    term_id: Option<Uuid>,
+    limit: Option<i64>,
+    offset: Option<i64>,
+    conn: &mut PgConnection,
+) -> Result<Vec<SnippetResponse>, Error> {
+    let snippets = snippets::search(term_id, limit, offset, conn)?;
+    let result = snippets.into_iter().map(SnippetResponse::from).collect();
+    Ok(result)
+}
+
+#[search]
+fn search(
+    auth: AuthenticationStatus,
+    query: SnippetQueryStringExtractor,
+    conn: &mut PgConnection,
+) -> Result<SnippetSearchResponse, Error> {
+    auth.ok()?;
+    let limit = PAGE_SIZE;
+    let offset = (query.page - 1) * PAGE_SIZE;
+    let pages = count(query.term_id, PAGE_SIZE, conn)?;
+    let snippets = load_snippets(query.term_id, Some(limit), Some(offset), conn)?;
+    let result = SnippetSearchResponse { pages, snippets };
+    Ok(result)
 }
 
 #[update]

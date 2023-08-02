@@ -24,6 +24,8 @@ pub mod role;
 pub use self::role::Role;
 pub mod snippet_response;
 pub use self::snippet_response::SnippetResponse;
+pub mod snippet_search_response;
+pub use self::snippet_search_response::SnippetSearchResponse;
 pub mod snippet_term_response;
 pub use self::snippet_term_response::SnippetTermResponse;
 pub mod stats_response;

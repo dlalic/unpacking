@@ -17,6 +17,7 @@ src/models/media_stats_response.rs
 src/models/mod.rs
 src/models/role.rs
 src/models/snippet_response.rs
+src/models/snippet_search_response.rs
 src/models/snippet_term_response.rs
 src/models/stats_response.rs
 src/models/term_graph_response.rs

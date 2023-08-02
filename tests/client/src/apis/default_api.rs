@@ -19,10 +19,10 @@ use super::{Error, configuration};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum CreateAuthError {
-    Status400(serde_json::Value),
-    Status500(serde_json::Value),
-    Status403(serde_json::Value),
     Status401(serde_json::Value),
+    Status403(serde_json::Value),
+    Status500(serde_json::Value),
+    Status400(serde_json::Value),
     UnknownValue(serde_json::Value),
 }
 
@@ -30,10 +30,10 @@ pub enum CreateAuthError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum CreateSnippetsError {
-    Status403(serde_json::Value),
     Status401(serde_json::Value),
-    Status500(serde_json::Value),
     Status400(serde_json::Value),
+    Status403(serde_json::Value),
+    Status500(serde_json::Value),
     UnknownValue(serde_json::Value),
 }
 
@@ -41,10 +41,10 @@ pub enum CreateSnippetsError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum CreateTermsError {
-    Status401(serde_json::Value),
-    Status400(serde_json::Value),
-    Status500(serde_json::Value),
     Status403(serde_json::Value),
+    Status500(serde_json::Value),
+    Status400(serde_json::Value),
+    Status401(serde_json::Value),
     UnknownValue(serde_json::Value),
 }
 
@@ -52,10 +52,10 @@ pub enum CreateTermsError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum CreateUsersError {
-    Status500(serde_json::Value),
     Status401(serde_json::Value),
-    Status403(serde_json::Value),
+    Status500(serde_json::Value),
     Status400(serde_json::Value),
+    Status403(serde_json::Value),
     UnknownValue(serde_json::Value),
 }
 
@@ -63,9 +63,9 @@ pub enum CreateUsersError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum DeleteSnippetsError {
-    Status403(),
-    Status401(),
     Status500(),
+    Status401(),
+    Status403(),
     Status400(),
     UnknownValue(serde_json::Value),
 }
@@ -75,9 +75,9 @@ pub enum DeleteSnippetsError {
 #[serde(untagged)]
 pub enum DeleteTermsError {
     Status400(),
+    Status401(),
     Status500(),
     Status403(),
-    Status401(),
     UnknownValue(serde_json::Value),
 }
 
@@ -87,8 +87,8 @@ pub enum DeleteTermsError {
 pub enum DeleteUsersError {
     Status401(),
     Status500(),
-    Status403(),
     Status400(),
+    Status403(),
     UnknownValue(serde_json::Value),
 }
 
@@ -96,9 +96,9 @@ pub enum DeleteUsersError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ReadAllAuthorsError {
+    Status403(serde_json::Value),
     Status400(serde_json::Value),
     Status401(serde_json::Value),
-    Status403(serde_json::Value),
     Status500(serde_json::Value),
     UnknownValue(serde_json::Value),
 }
@@ -107,9 +107,9 @@ pub enum ReadAllAuthorsError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ReadAllSnippetsError {
-    Status400(serde_json::Value),
-    Status500(serde_json::Value),
     Status403(serde_json::Value),
+    Status500(serde_json::Value),
+    Status400(serde_json::Value),
     Status401(serde_json::Value),
     UnknownValue(serde_json::Value),
 }
@@ -118,10 +118,10 @@ pub enum ReadAllSnippetsError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ReadAllTermsError {
+    Status400(serde_json::Value),
     Status403(serde_json::Value),
     Status401(serde_json::Value),
     Status500(serde_json::Value),
-    Status400(serde_json::Value),
     UnknownValue(serde_json::Value),
 }
 
@@ -129,10 +129,10 @@ pub enum ReadAllTermsError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ReadAllTranslationsError {
-    Status401(serde_json::Value),
-    Status500(serde_json::Value),
-    Status403(serde_json::Value),
     Status400(serde_json::Value),
+    Status500(serde_json::Value),
+    Status401(serde_json::Value),
+    Status403(serde_json::Value),
     UnknownValue(serde_json::Value),
 }
 
@@ -140,10 +140,10 @@ pub enum ReadAllTranslationsError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ReadAllUsersError {
-    Status400(serde_json::Value),
-    Status401(serde_json::Value),
-    Status500(serde_json::Value),
     Status403(serde_json::Value),
+    Status400(serde_json::Value),
+    Status500(serde_json::Value),
+    Status401(serde_json::Value),
     UnknownValue(serde_json::Value),
 }
 
@@ -151,10 +151,21 @@ pub enum ReadAllUsersError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ReadUsersError {
+    Status400(serde_json::Value),
     Status500(serde_json::Value),
+    Status403(serde_json::Value),
     Status401(serde_json::Value),
+    UnknownValue(serde_json::Value),
+}
+
+/// struct for typed errors of method [`search_snippets`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum SearchSnippetsError {
+    Status500(serde_json::Value),
     Status403(serde_json::Value),
     Status400(serde_json::Value),
+    Status401(serde_json::Value),
     UnknownValue(serde_json::Value),
 }
 
@@ -162,10 +173,10 @@ pub enum ReadUsersError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum SnippetsStatsGetError {
-    Status403(serde_json::Value),
     Status401(serde_json::Value),
     Status500(serde_json::Value),
     Status400(serde_json::Value),
+    Status403(serde_json::Value),
     UnknownValue(serde_json::Value),
 }
 
@@ -173,9 +184,9 @@ pub enum SnippetsStatsGetError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum TermsGraphGetError {
+    Status400(serde_json::Value),
     Status403(serde_json::Value),
     Status500(serde_json::Value),
-    Status400(serde_json::Value),
     Status401(serde_json::Value),
     UnknownValue(serde_json::Value),
 }
@@ -185,9 +196,9 @@ pub enum TermsGraphGetError {
 #[serde(untagged)]
 pub enum UpdateSnippetsError {
     Status403(),
-    Status500(),
-    Status401(),
     Status400(),
+    Status401(),
+    Status500(),
     UnknownValue(serde_json::Value),
 }
 
@@ -197,8 +208,8 @@ pub enum UpdateSnippetsError {
 pub enum UpdateTermsError {
     Status400(),
     Status401(),
-    Status403(),
     Status500(),
+    Status403(),
     UnknownValue(serde_json::Value),
 }
 
@@ -206,10 +217,10 @@ pub enum UpdateTermsError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum UpdateUsersError {
-    Status403(),
-    Status400(),
-    Status500(),
     Status401(),
+    Status400(),
+    Status403(),
+    Status500(),
     UnknownValue(serde_json::Value),
 }
 
@@ -597,6 +608,40 @@ pub async fn read_users(configuration: &configuration::Configuration, id: &str) 
         serde_json::from_str(&local_var_content).map_err(Error::from)
     } else {
         let local_var_entity: Option<ReadUsersError> = serde_json::from_str(&local_var_content).ok();
+        let local_var_error = ResponseContent { status: local_var_status, content: local_var_content, entity: local_var_entity };
+        Err(Error::ResponseError(local_var_error))
+    }
+}
+
+pub async fn search_snippets(configuration: &configuration::Configuration, page: i64, term_id: Option<&str>) -> Result<crate::models::SnippetSearchResponse, Error<SearchSnippetsError>> {
+    let local_var_configuration = configuration;
+
+    let local_var_client = &local_var_configuration.client;
+
+    let local_var_uri_str = format!("{}/snippets/search", local_var_configuration.base_path);
+    let mut local_var_req_builder = local_var_client.request(reqwest::Method::GET, local_var_uri_str.as_str());
+
+    if let Some(ref local_var_str) = term_id {
+        local_var_req_builder = local_var_req_builder.query(&[("term_id", &local_var_str.to_string())]);
+    }
+    local_var_req_builder = local_var_req_builder.query(&[("page", &page.to_string())]);
+    if let Some(ref local_var_user_agent) = local_var_configuration.user_agent {
+        local_var_req_builder = local_var_req_builder.header(reqwest::header::USER_AGENT, local_var_user_agent.clone());
+    }
+    if let Some(ref local_var_token) = local_var_configuration.bearer_access_token {
+        local_var_req_builder = local_var_req_builder.bearer_auth(local_var_token.to_owned());
+    };
+
+    let local_var_req = local_var_req_builder.build()?;
+    let local_var_resp = local_var_client.execute(local_var_req).await?;
+
+    let local_var_status = local_var_resp.status();
+    let local_var_content = local_var_resp.text().await?;
+
+    if !local_var_status.is_client_error() && !local_var_status.is_server_error() {
+        serde_json::from_str(&local_var_content).map_err(Error::from)
+    } else {
+        let local_var_entity: Option<SearchSnippetsError> = serde_json::from_str(&local_var_content).ok();
         let local_var_error = ResponseContent { status: local_var_status, content: local_var_content, entity: local_var_entity };
         Err(Error::ResponseError(local_var_error))
     }
