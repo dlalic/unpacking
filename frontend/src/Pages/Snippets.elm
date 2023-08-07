@@ -25,7 +25,7 @@ import Translations.Buttons exposing (delete, edit, newSnippet, source)
 import Translations.Forms as Forms
 import Translations.Labels exposing (loading, onError, videoThumbnail)
 import Translations.Titles exposing (snippets)
-import UI.Button exposing (defaultButton, viewButton)
+import UI.Button exposing (defaultButton, tagButton, viewButton)
 import UI.Card exposing (keyedCard)
 import UI.ColorPalette exposing (darkGray, green)
 import UI.Dialog exposing (defaultDialog)
@@ -42,7 +42,7 @@ page : Shared.Model -> Request -> Page.With Model Msg
 page shared req =
     Page.protected.element
         (\session ->
-            { init = init session
+            { init = init session req
             , update = update req shared.storage
             , view = view shared
             , subscriptions = \_ -> Sub.none
@@ -60,6 +60,7 @@ type alias Model =
     , authorsDropdown : Dropdown AuthorResponse
     , termsDropdown : Dropdown TermResponse
     , currentPage : Int
+    , term : Maybe ( Uuid, String )
     }
 
 
@@ -70,8 +71,8 @@ type State
     | Errored String
 
 
-init : Auth.User -> ( Model, Cmd Msg )
-init session =
+init : Auth.User -> Request -> ( Model, Cmd Msg )
+init session req =
     loadSnippets
         { session = session
         , state = Loading
@@ -82,6 +83,7 @@ init session =
         , authorsDropdown = initModel
         , termsDropdown = initModel
         , currentPage = 1
+        , term = Maybe.map2 (\a b -> ( a, b )) (Maybe.andThen (\v -> Uuid.fromString v) (Dict.get "termID" req.query)) (Dict.get "name" req.query)
         }
 
 
@@ -101,13 +103,14 @@ type Msg
     | ClickedCancelDelete
     | ClickedSubmitDelete
     | ClickedPage Int
+    | ClickedClearTerm
 
 
 update : Request -> Storage -> Msg -> Model -> ( Model, Cmd Msg )
 update req storage msg model =
     case msg of
         SnippetsLoaded (Ok result) ->
-            ( { model | state = Loaded result }, Cmd.none )
+            ( { model | state = Loaded result }, Request.pushRoute Route.Snippets req )
 
         SnippetsLoaded (Err err) ->
             if isUnauthenticated err then
@@ -246,6 +249,9 @@ update req storage msg model =
         ClickedPage i ->
             loadSnippets { model | currentPage = i }
 
+        ClickedClearTerm ->
+            loadSnippets { model | term = Nothing }
+
 
 view : Shared.Model -> Model -> View Msg
 view shared model =
@@ -261,15 +267,30 @@ viewSnippets shared model =
             [ text (loading shared.translations) ]
 
         Loaded response ->
+            let
+                termButton : Element Msg
+                termButton =
+                    case model.term of
+                        Just ( _, name ) ->
+                            tagButton name ClickedClearTerm
+
+                        Nothing ->
+                            Element.none
+
+                common : List (Element Msg)
+                common =
+                    List.map (viewSnippet shared (model.session.role == RoleAdmin)) response.snippets
+                        ++ [ viewPagination model.currentPage response.pages ]
+            in
             case ( model.session.role, model.toUpdate, model.toDelete ) of
                 ( RoleAdmin, _, Just _ ) ->
                     [ defaultDialog shared.translations ClickedCancelDelete ClickedSubmitDelete ]
 
                 ( RoleAdmin, _, _ ) ->
-                    defaultButton (newSnippet shared.translations) ClickedNew :: List.map (viewSnippet shared True) response.snippets ++ [ viewPagination model.currentPage response.pages ]
+                    termButton :: defaultButton (newSnippet shared.translations) ClickedNew :: common
 
                 ( RoleUser, _, _ ) ->
-                    List.map (viewSnippet shared False) response.snippets ++ [ viewPagination model.currentPage response.pages ]
+                    termButton :: common
 
         LoadedEdit ( terms, authors ) ->
             case ( model.session.role, model.toUpdate ) of
@@ -349,7 +370,11 @@ viewPagination currentPage pages =
             in
             viewButton { title = String.fromInt i, action = Just (ClickedPage i), color = Just color }
     in
-    row [ spacing 10 ] (defaultButton " « " (ClickedPage 1) :: List.map (\v -> pageButton v) (List.range 1 pages) ++ [ defaultButton " » " (ClickedPage pages) ])
+    if pages > 0 then
+        row [ spacing 10 ] (defaultButton " « " (ClickedPage 1) :: List.map (\v -> pageButton v) (List.range 1 pages) ++ [ defaultButton " » " (ClickedPage pages) ])
+
+    else
+        Element.none
 
 
 editSnippet : Shared.Model -> EditSnippet -> Model -> List AuthorResponse -> List TermResponse -> Element Msg
@@ -384,7 +409,7 @@ updateSnippet model id snippet =
 
 loadSnippets : Model -> ( Model, Cmd Msg )
 loadSnippets model =
-    ( { model | state = Loading }, Api.send SnippetsLoaded (searchSnippets model.currentPage Nothing model.session.token) )
+    ( { model | state = Loading }, Api.send SnippetsLoaded (searchSnippets model.currentPage (Maybe.map (\( v, _ ) -> v) model.term) model.session.token) )
 
 
 editSnippetFromSnippet : SnippetResponse -> EditSnippet
