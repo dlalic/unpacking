@@ -4,6 +4,7 @@ import Api
 import Api.Data exposing (Role(..), TermResponse, UpdateTerm)
 import Api.Request.Default exposing (deleteTerms, readAllTerms, updateTerms)
 import Auth
+import Browser.Navigation
 import Common exposing (uuidFromString)
 import Dict
 import Element exposing (Element, paragraph, text)
@@ -21,7 +22,7 @@ import Storage exposing (Storage)
 import Translations.Buttons exposing (delete, edit, newTerm)
 import Translations.Forms exposing (related)
 import Translations.Labels exposing (loading, onError)
-import Translations.Titles exposing (terms)
+import Translations.Titles exposing (snippets, terms)
 import UI.Button exposing (defaultButton)
 import UI.Card exposing (keyedCard)
 import UI.Dialog exposing (defaultDialog)
@@ -69,6 +70,7 @@ type Msg
     | TermDeleted (Result Http.Error ())
     | UpdateTerm (Result Http.Error ())
     | ClickedNew
+    | ClickedSnippets TermResponse
     | Edit EditTerm
     | ChangedDropdown (ChangeEvent TermResponse)
     | ClickedCancelEdit
@@ -113,6 +115,9 @@ update req storage msg model =
 
         ClickedNew ->
             ( model, Request.pushRoute Route.Terms__New req )
+
+        ClickedSnippets term ->
+            ( model, Browser.Navigation.pushUrl req.key (Route.toHref Route.Snippets ++ "?termID=" ++ Uuid.toString term.id ++ "&name=" ++ term.name) )
 
         Edit term ->
             ( { model | toUpdate = Just term }, Cmd.none )
@@ -226,18 +231,23 @@ viewTerm shared canEdit all term =
         buttons : List (Element Msg)
         buttons =
             if canEdit then
-                [ defaultButton (edit shared.translations) (Edit (editTermFromTerm term all))
+                [ defaultButton (snippets shared.translations) click
+                , defaultButton (edit shared.translations) (Edit (editTermFromTerm term all))
                 , defaultButton (delete shared.translations) (ClickedDelete term.id)
                 ]
 
             else
-                []
+                [ defaultButton (snippets shared.translations) click ]
+
+        click : Msg
+        click =
+            ClickedSnippets term
 
         body : Element msg
         body =
             paragraph [ Font.size 16 ] [ text (String.join ", " (relatedUuidToText term.related all)) ]
     in
-    keyedCard { title = term.name, rightLabel = "", body = [ body ], onClick = Nothing, buttons = buttons } term.id
+    keyedCard { title = term.name, rightLabel = "", body = [ body ], onClick = Just click, buttons = buttons } term.id
 
 
 editTerm : Shared.Model -> EditTerm -> Model -> List TermResponse -> Element Msg
