@@ -43,6 +43,11 @@ pub fn admin_password() -> String {
     env::var("ADMIN_PASSWORD").expect("ADMIN_PASSWORD must be set")
 }
 
+pub fn db_pool_size() -> u32 {
+    let size = env::var("DB_POOL_SIZE").unwrap_or_else(|_| "10".to_string());
+    size.parse::<u32>().unwrap()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
