@@ -24,6 +24,7 @@ import TypedSvg.Attributes.InPx
 import TypedSvg.Core
 import TypedSvg.Types
 import UI.ColorPalette exposing (colorFromScale)
+import UI.Dimensions exposing (bodyHeight, bodyWidth)
 import UI.Layout as Layout exposing (scaled)
 import View exposing (View)
 
@@ -99,7 +100,7 @@ pieChart shared media =
     let
         width : Float
         width =
-            toFloat (min shared.window.width 1024 - 40)
+            bodyWidth shared.window
 
         radius : Float
         radius =
@@ -147,7 +148,7 @@ pieChart shared media =
                 [ TypedSvg.Core.text (stringFromMedia shared.translations response.media ++ " (" ++ String.fromInt response.count ++ ")") ]
     in
     Element.html
-        (TypedSvg.svg [ TypedSvg.Attributes.InPx.width width, TypedSvg.Attributes.InPx.height (radius * 2 + 90) ]
+        (TypedSvg.svg [ TypedSvg.Attributes.InPx.width width, TypedSvg.Attributes.InPx.height (bodyHeight shared.window) ]
             [ TypedSvg.g [ TypedSvg.Attributes.transform [ TypedSvg.Types.Translate (radius + 80) (radius + 40) ] ]
                 [ TypedSvg.g [] (List.indexedMap makeSlice pieData)
                 , TypedSvg.g [] (List.map2 makeLabel pieData media)

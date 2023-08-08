@@ -11,7 +11,7 @@ import I18Next exposing (Translations)
 import Shared
 import Translations.Buttons exposing (signOut)
 import Translations.Titles exposing (home, name, snippets, sourceCode, stats, terms, users)
-import UI.Dimensions exposing (fillMaxViewWidth)
+import UI.Dimensions exposing (defaultPadding, defaultSpacing, fillMaxViewWidth, footerHeightInPx)
 import UI.Header exposing (HeaderButton, Home, header)
 import UI.Link exposing (footerLink)
 import UI.TabBar exposing (TabBar, tabBar)
@@ -24,7 +24,7 @@ layout route shared children =
         ]
         (column [ fillMaxViewWidth, height fill, centerX ]
             (List.append (headerAndTabs shared route)
-                [ column [ width fill, height fill, padding 20, spacing 20 ] children
+                [ column [ width fill, height fill, padding defaultPadding, spacing defaultSpacing ] children
                 , footer shared.translations
                 ]
             )
@@ -81,8 +81,9 @@ footer : Translations -> Element msg
 footer translations =
     row
         [ width fill
-        , padding 20
-        , spacing 20
+        , padding defaultPadding
+        , spacing defaultSpacing
+        , height footerHeightInPx
         , Border.widthEach { top = 1, bottom = 0, left = 0, right = 0 }
         ]
         [ footerLink (sourceCode translations) "https://github.com/dlalic/unpacking"
