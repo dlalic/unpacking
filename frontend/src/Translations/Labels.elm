@@ -7,11 +7,6 @@ module Translations.Labels exposing (..)
 import I18Next exposing (Delims(..), Translations, t, tr)
 
 
-hello : Translations -> String -> String
-hello translations user =
-    tr translations Curly "labels.hello" [ ( "user", user ) ]
-
-
 loading : Translations -> String
 loading translations =
     t translations "labels.loading"

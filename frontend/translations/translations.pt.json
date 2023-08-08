@@ -1,0 +1,62 @@
+{
+  "buttons": {
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "new_snippet": "Nova cortada",
+    "new_term": "Novo termo",
+    "new_user": "Novo usuário",
+    "sign_in": "Entrar",
+    "sign_out": "Sair",
+    "source": "Fonte",
+    "submit": "Enviar"
+  },
+  "titles": {
+    "home": "Página inicial",
+    "name": "Desempacotar",
+    "snippets": "Cortadas",
+    "source_code": "Código-fonte",
+    "stats": "Estatísticas",
+    "terms": "Termos",
+    "users": "Usuários"
+  },
+  "dialogs": {
+    "confirm_title": "Você tem certeza?"
+  },
+  "forms": {
+    "authors": "Autores",
+    "edit": "Editar {{sth}}",
+    "link": "Link",
+    "media": "Mídia",
+    "media_blog": "Blog",
+    "media_book": "Livro",
+    "media_news": "Notícias",
+    "media_twitter": "Twitter",
+    "media_video": "Video",
+    "media_website": "Site",
+    "name": "Nome",
+    "on_length_less_than": "Deve ter pelo menos {{n}} caracteres.",
+    "on_name_empty": "Por favor, digite um nome.",
+    "on_password_empty": "Por favor, digite uma senha.",
+    "on_snippet_empty": "Por favor, digite uma cortada.",
+    "on_username_empty": "Por favor, digite um nome de usuário.",
+    "password": "Senha",
+    "role": "Função",
+    "role_admin": "Admin",
+    "role_user": "Usuário",
+    "related": "Relacionado",
+    "text": "Texto",
+    "terms": "Termos",
+    "username": "Nome de usuário"
+  },
+  "labels": {
+    "loading": "Carregando...",
+    "no_snippets": "Não há cortadas",
+    "no_terms": "Não há termos",
+    "no_users": "Não há usuários",
+    "on_error": "Erro: {{reason}}",
+    "on_sign_out": "Assinou com sucesso!",
+    "video_thumbnail": "Miniatura do vídeo"
+  }
+}

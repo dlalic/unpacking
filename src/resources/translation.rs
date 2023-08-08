@@ -25,7 +25,7 @@ async fn read_all(state: &mut State) -> Result<Translation, Error> {
 
 fn detect_language(header_value: &HeaderValue) -> String {
     let fallback = "en".to_string();
-    let supported = vec!["en", "de"];
+    let supported = vec!["en", "pt"];
     match header_value.to_str() {
         Ok(some) => {
             let user_languages = parse(some);
@@ -80,13 +80,13 @@ mod tests {
 
     #[test]
     fn lang_non_default() {
-        let header = HeaderValue::from_static("de");
+        let header = HeaderValue::from_static("pt");
         let result = detect_language(&header);
-        assert_eq!(&result, "de");
+        assert_eq!(&result, "pt");
 
-        let header = HeaderValue::from_static("de-DE");
+        let header = HeaderValue::from_static("pt-BR");
         let result = detect_language(&header);
-        assert_eq!(&result, "de");
+        assert_eq!(&result, "pt");
     }
 
     #[test]

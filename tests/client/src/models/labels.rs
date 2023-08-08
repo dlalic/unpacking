@@ -13,8 +13,6 @@
 
 #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
 pub struct Labels {
-    #[serde(rename = "hello")]
-    pub hello: String,
     #[serde(rename = "loading")]
     pub loading: String,
     #[serde(rename = "no_snippets")]
@@ -32,9 +30,8 @@ pub struct Labels {
 }
 
 impl Labels {
-    pub fn new(hello: String, loading: String, no_snippets: String, no_terms: String, no_users: String, on_error: String, on_sign_out: String, video_thumbnail: String) -> Labels {
+    pub fn new(loading: String, no_snippets: String, no_terms: String, no_users: String, on_error: String, on_sign_out: String, video_thumbnail: String) -> Labels {
         Labels {
-            hello,
             loading,
             no_snippets,
             no_terms,

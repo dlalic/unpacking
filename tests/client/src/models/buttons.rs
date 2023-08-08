@@ -35,12 +35,10 @@ pub struct Buttons {
     pub source: String,
     #[serde(rename = "submit")]
     pub submit: String,
-    #[serde(rename = "view")]
-    pub view: String,
 }
 
 impl Buttons {
-    pub fn new(cancel: String, confirm: String, delete: String, edit: String, new_snippet: String, new_term: String, new_user: String, sign_in: String, sign_out: String, source: String, submit: String, view: String) -> Buttons {
+    pub fn new(cancel: String, confirm: String, delete: String, edit: String, new_snippet: String, new_term: String, new_user: String, sign_in: String, sign_out: String, source: String, submit: String) -> Buttons {
         Buttons {
             cancel,
             confirm,
@@ -53,7 +51,6 @@ impl Buttons {
             sign_out,
             source,
             submit,
-            view,
         }
     }
 }

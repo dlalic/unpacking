@@ -10,8 +10,7 @@
     "sign_in": "Sign in",
     "sign_out": "Sign out",
     "source": "Source",
-    "submit": "Submit",
-    "view": "View"
+    "submit": "Submit"
   },
   "titles": {
     "home": "Homepage",
@@ -52,7 +51,6 @@
     "username": "Username"
   },
   "labels": {
-    "hello": "Hello, {{user}}!",
     "loading": "Loading...",
     "no_snippets": "No snippets",
     "no_terms": "No terms",

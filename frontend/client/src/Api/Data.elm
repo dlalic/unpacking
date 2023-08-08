@@ -119,7 +119,6 @@ type alias Buttons =
     , signOut : String
     , source : String
     , submit : String
-    , view : String
     }
 
 
@@ -187,8 +186,7 @@ type alias Forms =
 
 
 type alias Labels =
-    { hello : String
-    , loading : String
+    { loading : String
     , noSnippets : String
     , noTerms : String
     , noUsers : String
@@ -383,7 +381,6 @@ encodeButtonsPairs model =
             , encode "sign_out" Json.Encode.string model.signOut
             , encode "source" Json.Encode.string model.source
             , encode "submit" Json.Encode.string model.submit
-            , encode "view" Json.Encode.string model.view
             ]
     in
     pairs
@@ -556,8 +553,7 @@ encodeLabelsPairs : Labels -> List EncodedField
 encodeLabelsPairs model =
     let
         pairs =
-            [ encode "hello" Json.Encode.string model.hello
-            , encode "loading" Json.Encode.string model.loading
+            [ encode "loading" Json.Encode.string model.loading
             , encode "no_snippets" Json.Encode.string model.noSnippets
             , encode "no_terms" Json.Encode.string model.noTerms
             , encode "no_users" Json.Encode.string model.noUsers
@@ -949,7 +945,6 @@ buttonsDecoder =
         |> decode "sign_out" Json.Decode.string 
         |> decode "source" Json.Decode.string 
         |> decode "submit" Json.Decode.string 
-        |> decode "view" Json.Decode.string 
 
 
 createSnippetDecoder : Json.Decode.Decoder CreateSnippet
@@ -1024,7 +1019,6 @@ formsDecoder =
 labelsDecoder : Json.Decode.Decoder Labels
 labelsDecoder =
     Json.Decode.succeed Labels
-        |> decode "hello" Json.Decode.string 
         |> decode "loading" Json.Decode.string 
         |> decode "no_snippets" Json.Decode.string 
         |> decode "no_terms" Json.Decode.string 
