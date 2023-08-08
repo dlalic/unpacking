@@ -1,11 +1,11 @@
 module UI.TabBar exposing (TabBar, tabBar)
 
-import Element exposing (Attribute, Element, column, fill, htmlAttribute, link, mouseOver, moveUp, padding, row, spacing, text, width)
+import Element exposing (Attribute, Element, column, fill, height, htmlAttribute, link, mouseOver, moveUp, padding, row, spacing, text, width)
 import Element.Border as Border
 import Element.Font as Font
 import Gen.Route as Route exposing (Route)
 import Simple.Transition as Transition
-import UI.Dimensions exposing (smallScreenWidth)
+import UI.Dimensions exposing (defaultPadding, defaultSpacing, headerHeightInPx, smallScreenWidth)
 
 
 type alias TabBar =
@@ -17,15 +17,24 @@ type alias TabBar =
 
 tabBar : Int -> List TabBar -> Element msg
 tabBar windowWidth models =
+    let
+        style : List (Attribute msg)
+        style =
+            [ width fill
+            , padding defaultPadding
+            , spacing defaultSpacing
+            , Border.widthEach { left = 0, top = 0, right = 0, bottom = 1 }
+            ]
+    in
     if windowWidth < smallScreenWidth then
-        column [ width fill, padding 20, spacing 20, Border.widthEach { left = 0, top = 0, right = 0, bottom = 1 } ] (List.map tabBarButton models)
+        column style (List.map (tabBarButton 16) models)
 
     else
-        row [ width fill, padding 20, spacing 20, Border.widthEach { left = 0, top = 0, right = 0, bottom = 1 } ] (List.map tabBarButton models)
+        row (height headerHeightInPx :: style) (List.map (tabBarButton 18) models)
 
 
-tabBarButton : TabBar -> Element msg
-tabBarButton model =
+tabBarButton : Int -> TabBar -> Element msg
+tabBarButton size model =
     let
         font : Attribute msg
         font =
@@ -37,7 +46,7 @@ tabBarButton model =
     in
     link
         [ font
-        , Font.size 18
+        , Font.size size
         , properties_
             [ Transition.transform 500 [ Transition.delay 200 ]
             ]

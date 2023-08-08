@@ -26,6 +26,7 @@ import TypedSvg.Attributes.InPx
 import TypedSvg.Core
 import TypedSvg.Types
 import UI.ColorPalette exposing (colorFromScale)
+import UI.Dimensions exposing (bodyHeight, bodyWidth)
 import UI.Layout as Layout
 import View exposing (View)
 import Zoom exposing (OnZoom, Zoom)
@@ -302,8 +303,8 @@ viewGraph window model =
     Element.html
         (TypedSvg.svg
             [ TypedSvg.Attributes.id elementId
-            , TypedSvg.Attributes.InPx.width (toFloat (min window.width 1024 - 40))
-            , TypedSvg.Attributes.InPx.height (toFloat window.height / 2)
+            , TypedSvg.Attributes.InPx.width (bodyWidth window)
+            , TypedSvg.Attributes.InPx.height (bodyHeight window)
             ]
             [ TypedSvg.rect
                 (TypedSvg.Attributes.width (TypedSvg.Types.Percent 100)

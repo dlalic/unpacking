@@ -1,10 +1,11 @@
 module UI.Header exposing (HeaderButton, Home, header)
 
-import Element exposing (Element, alignRight, fill, link, padding, row, spacing, text, width)
+import Element exposing (Element, alignRight, fill, height, link, padding, row, text, width)
 import Element.Border as Border
 import Element.Font as Font
 import Gen.Route as Route exposing (Route)
 import UI.ColorPalette exposing (darkGray)
+import UI.Dimensions exposing (defaultPadding, headerHeightInPx)
 
 
 type alias Home =
@@ -41,5 +42,5 @@ header home button =
                 Nothing ->
                     []
     in
-    row [ width fill, padding 20, spacing 20, Border.widthEach { left = 0, top = 0, right = 0, bottom = 1 } ]
+    row [ width fill, padding defaultPadding, height headerHeightInPx, Border.widthEach { left = 0, top = 0, right = 0, bottom = 1 } ]
         (List.append [ homeLink home.route home.title ] link)

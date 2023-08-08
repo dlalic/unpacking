@@ -10,6 +10,7 @@ import I18Next exposing (Translations)
 import Translations.Buttons exposing (cancel, submit)
 import UI.Button exposing (defaultButton)
 import UI.ColorPalette exposing (black, lightGray, red, white)
+import UI.Dimensions exposing (defaultPadding, defaultSpacing)
 import Uuid exposing (Uuid)
 
 
@@ -73,7 +74,7 @@ cardStyle =
         , top = 0
         }
     , Border.color lightGray
-    , padding 20
-    , spacing 20
+    , padding defaultPadding
+    , spacing defaultSpacing
     , width fill
     ]
