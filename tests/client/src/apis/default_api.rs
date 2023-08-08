@@ -21,8 +21,8 @@ use super::{Error, configuration};
 pub enum CreateAuthError {
     Status401(serde_json::Value),
     Status403(serde_json::Value),
-    Status500(serde_json::Value),
     Status400(serde_json::Value),
+    Status500(serde_json::Value),
     UnknownValue(serde_json::Value),
 }
 
@@ -30,10 +30,10 @@ pub enum CreateAuthError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum CreateSnippetsError {
-    Status401(serde_json::Value),
     Status400(serde_json::Value),
-    Status403(serde_json::Value),
     Status500(serde_json::Value),
+    Status403(serde_json::Value),
+    Status401(serde_json::Value),
     UnknownValue(serde_json::Value),
 }
 
@@ -42,9 +42,9 @@ pub enum CreateSnippetsError {
 #[serde(untagged)]
 pub enum CreateTermsError {
     Status403(serde_json::Value),
-    Status500(serde_json::Value),
-    Status400(serde_json::Value),
     Status401(serde_json::Value),
+    Status400(serde_json::Value),
+    Status500(serde_json::Value),
     UnknownValue(serde_json::Value),
 }
 
@@ -52,10 +52,10 @@ pub enum CreateTermsError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum CreateUsersError {
-    Status401(serde_json::Value),
+    Status403(serde_json::Value),
     Status500(serde_json::Value),
     Status400(serde_json::Value),
-    Status403(serde_json::Value),
+    Status401(serde_json::Value),
     UnknownValue(serde_json::Value),
 }
 
@@ -74,8 +74,8 @@ pub enum DeleteSnippetsError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum DeleteTermsError {
-    Status400(),
     Status401(),
+    Status400(),
     Status500(),
     Status403(),
     UnknownValue(serde_json::Value),
@@ -85,10 +85,10 @@ pub enum DeleteTermsError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum DeleteUsersError {
-    Status401(),
-    Status500(),
-    Status400(),
     Status403(),
+    Status400(),
+    Status500(),
+    Status401(),
     UnknownValue(serde_json::Value),
 }
 
@@ -96,9 +96,9 @@ pub enum DeleteUsersError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ReadAllAuthorsError {
-    Status403(serde_json::Value),
     Status400(serde_json::Value),
     Status401(serde_json::Value),
+    Status403(serde_json::Value),
     Status500(serde_json::Value),
     UnknownValue(serde_json::Value),
 }
@@ -107,10 +107,10 @@ pub enum ReadAllAuthorsError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ReadAllSnippetsError {
+    Status401(serde_json::Value),
     Status403(serde_json::Value),
     Status500(serde_json::Value),
     Status400(serde_json::Value),
-    Status401(serde_json::Value),
     UnknownValue(serde_json::Value),
 }
 
@@ -130,9 +130,9 @@ pub enum ReadAllTermsError {
 #[serde(untagged)]
 pub enum ReadAllTranslationsError {
     Status400(serde_json::Value),
-    Status500(serde_json::Value),
     Status401(serde_json::Value),
     Status403(serde_json::Value),
+    Status500(serde_json::Value),
     UnknownValue(serde_json::Value),
 }
 
@@ -142,8 +142,8 @@ pub enum ReadAllTranslationsError {
 pub enum ReadAllUsersError {
     Status403(serde_json::Value),
     Status400(serde_json::Value),
-    Status500(serde_json::Value),
     Status401(serde_json::Value),
+    Status500(serde_json::Value),
     UnknownValue(serde_json::Value),
 }
 
@@ -151,10 +151,10 @@ pub enum ReadAllUsersError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ReadUsersError {
-    Status400(serde_json::Value),
-    Status500(serde_json::Value),
     Status403(serde_json::Value),
     Status401(serde_json::Value),
+    Status400(serde_json::Value),
+    Status500(serde_json::Value),
     UnknownValue(serde_json::Value),
 }
 
@@ -162,10 +162,10 @@ pub enum ReadUsersError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum SearchSnippetsError {
-    Status500(serde_json::Value),
-    Status403(serde_json::Value),
     Status400(serde_json::Value),
+    Status403(serde_json::Value),
     Status401(serde_json::Value),
+    Status500(serde_json::Value),
     UnknownValue(serde_json::Value),
 }
 
@@ -184,10 +184,10 @@ pub enum SnippetsStatsGetError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum TermsGraphGetError {
-    Status400(serde_json::Value),
     Status403(serde_json::Value),
-    Status500(serde_json::Value),
     Status401(serde_json::Value),
+    Status400(serde_json::Value),
+    Status500(serde_json::Value),
     UnknownValue(serde_json::Value),
 }
 
@@ -195,10 +195,10 @@ pub enum TermsGraphGetError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum UpdateSnippetsError {
-    Status403(),
     Status400(),
-    Status401(),
     Status500(),
+    Status401(),
+    Status403(),
     UnknownValue(serde_json::Value),
 }
 
@@ -206,10 +206,10 @@ pub enum UpdateSnippetsError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum UpdateTermsError {
-    Status400(),
     Status401(),
     Status500(),
     Status403(),
+    Status400(),
     UnknownValue(serde_json::Value),
 }
 
@@ -217,9 +217,9 @@ pub enum UpdateTermsError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum UpdateUsersError {
+    Status403(),
     Status401(),
     Status400(),
-    Status403(),
     Status500(),
     UnknownValue(serde_json::Value),
 }

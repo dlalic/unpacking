@@ -60,8 +60,3 @@ source translations =
 submit : Translations -> String
 submit translations =
     t translations "buttons.submit"
-
-
-view : Translations -> String
-view translations =
-    t translations "buttons.view"

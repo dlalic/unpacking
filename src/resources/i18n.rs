@@ -24,7 +24,6 @@ pub struct Buttons {
     pub sign_out: String,
     pub source: String,
     pub submit: String,
-    pub view: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, OpenapiType)]
@@ -73,7 +72,6 @@ pub struct Forms {
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, OpenapiType)]
 pub struct Labels {
-    pub hello: String,
     pub loading: String,
     pub no_snippets: String,
     pub no_terms: String,
