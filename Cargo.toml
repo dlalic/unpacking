@@ -22,7 +22,7 @@ gotham_restful = { version = "0.8.3", default-features = false, features = ["ful
 gotham_restful_derive = "0.8.2"
 jsonwebtoken = "8.1.1"
 language-tags = "0.3.2"
-log = "0.4.17"
+log = "0.4.20"
 openapi_type = { version = "0.4.1", features = ["chrono", "uuid"] }
 r2d2 = "0.8.10"
 r2d2-diesel = "1.0.0"
