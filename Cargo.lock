@@ -2024,9 +2024,9 @@ dependencies = [
 
 [[package]]
 name = "openapi_type"
-version = "0.4.2"
+version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0c83d154f18fc290951b6296d0b5bd81f139ec3680ddc6662e0837d2530d6006"
+checksum = "6e32926f1dc9d2515542aa9ed4625a296d31c8da06ab7e161b36c85d7e61afa9"
 dependencies = [
  "chrono",
  "indexmap 1.9.3",
