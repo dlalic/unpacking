@@ -1242,12 +1242,12 @@ dependencies = [
 
 [[package]]
 name = "gotham_restful_derive"
-version = "0.8.2"
+version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1d78585e2fc6aae9d5a4b0d365185ab63124a80191162d0a418fa50b0fb795d1"
+checksum = "740f95420320432090c7074232bacb64a064fdab1becbae86e23f99b7f3ff660"
 dependencies = [
  "either",
- "lazy-regex 2.5.0",
+ "lazy-regex 3.0.0",
  "paste",
  "proc-macro2",
  "quote",

@@ -19,7 +19,7 @@ gotham = "0.7.1"
 gotham_derive = "0.7.0"
 gotham_middleware_diesel = "0.5.0"
 gotham_restful = { version = "0.8.3", default-features = false, features = ["full"] }
-gotham_restful_derive = "0.8.2"
+gotham_restful_derive = "0.8.3"
 jsonwebtoken = "8.1.1"
 language-tags = "0.3.2"
 log = "0.4.20"
