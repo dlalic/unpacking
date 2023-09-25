@@ -1204,9 +1204,9 @@ dependencies = [
 
 [[package]]
 name = "gotham_middleware_diesel"
-version = "0.5.0"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9dc960d66bdf4dab54601f2150b8cdef78d6887f276e4fe4d98d2a00531e06a9"
+checksum = "7c1cd0720595239590dceb214fe42e39dd9697a10535ce72ed1896c3bc3dd317"
 dependencies = [
  "diesel 2.1.1",
  "futures-util",
