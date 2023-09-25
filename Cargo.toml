@@ -44,7 +44,7 @@ openapi = { path = "./tests/client" }
 pixelmatch = "0.1.0"
 proptest = "1.0.0"
 rand = "0.8.5"
-temp-env = "0.3.5"
+temp-env = "0.3.6"
 thirtyfour = { version = "0.32.0-rc.8"}
 
 [build-dependencies]
