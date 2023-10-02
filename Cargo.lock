@@ -551,7 +551,7 @@ dependencies = [
  "inventory",
  "itertools",
  "junit-report",
- "lazy-regex 3.0.0",
+ "lazy-regex",
  "linked-hash-map",
  "once_cell",
  "pin-project",
@@ -1217,12 +1217,11 @@ dependencies = [
 
 [[package]]
 name = "gotham_restful"
-version = "0.8.3"
+version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e788a81eb50f0f366a241d99cb7de65ed3f6c4160a8cc9ab1a79f2bb5db284af"
+checksum = "6a1058986facc0b6de9e167a7640677824bcccf3f23981acd284a19940f604e8"
 dependencies = [
  "base64 0.21.2",
- "cookie 0.15.2",
  "futures-core",
  "futures-util",
  "gotham",
@@ -1230,7 +1229,7 @@ dependencies = [
  "gotham_restful_derive",
  "gotham_restful_redoc",
  "jsonwebtoken",
- "lazy-regex 2.5.0",
+ "lazy-regex",
  "log",
  "openapi_type",
  "parking_lot",
@@ -1247,7 +1246,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "740f95420320432090c7074232bacb64a064fdab1becbae86e23f99b7f3ff660"
 dependencies = [
  "either",
- "lazy-regex 3.0.0",
+ "lazy-regex",
  "paste",
  "proc-macro2",
  "quote",
@@ -1664,36 +1663,13 @@ checksum = "d4345964bb142484797b161f473a503a434de77149dd8c7427788c6e13379388"
 
 [[package]]
 name = "lazy-regex"
-version = "2.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ff63c423c68ea6814b7da9e88ce585f793c87ddd9e78f646970891769c8235d4"
-dependencies = [
- "lazy-regex-proc_macros 2.4.1",
- "once_cell",
- "regex",
-]
-
-[[package]]
-name = "lazy-regex"
 version = "3.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a10cfecab9e7e81981b6547d87bd96c38fd90b2d4cfdc79638d91bebfd2568f5"
 dependencies = [
- "lazy-regex-proc_macros 3.0.0",
+ "lazy-regex-proc_macros",
  "once_cell",
  "regex",
-]
-
-[[package]]
-name = "lazy-regex-proc_macros"
-version = "2.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8edfc11b8f56ce85e207e62ea21557cfa09bb24a8f6b04ae181b086ff8611c22"
-dependencies = [
- "proc-macro2",
- "quote",
- "regex",
- "syn 1.0.109",
 ]
 
 [[package]]
