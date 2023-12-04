@@ -20,7 +20,7 @@ gotham_derive = "0.7.0"
 gotham_middleware_diesel = "0.5.1"
 gotham_restful = { version = "0.8.4", default-features = false, features = ["full"] }
 gotham_restful_derive = "0.8.3"
-jsonwebtoken = "9.1.0"
+jsonwebtoken = "9.2.0"
 language-tags = "0.3.2"
 log = "0.4.20"
 openapi_type = { version = "0.4.3", features = ["chrono", "uuid"] }
