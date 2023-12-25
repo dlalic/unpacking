@@ -700,7 +700,7 @@ dependencies = [
  "itoa",
  "pq-sys",
  "r2d2",
- "uuid 1.4.1",
+ "uuid 0.8.2",
 ]
 
 [[package]]
@@ -896,7 +896,7 @@ dependencies = [
  "deunicode",
  "dummy",
  "rand",
- "uuid 1.4.1",
+ "uuid 1.6.1",
 ]
 
 [[package]]
@@ -1198,7 +1198,7 @@ dependencies = [
  "thiserror",
  "time 0.3.23",
  "tokio",
- "uuid 1.4.1",
+ "uuid 1.6.1",
 ]
 
 [[package]]
@@ -2027,7 +2027,7 @@ dependencies = [
  "serde_derive",
  "serde_json",
  "url",
- "uuid 1.4.1",
+ "uuid 1.6.1",
 ]
 
 [[package]]
@@ -2042,7 +2042,7 @@ dependencies = [
  "openapiv3",
  "serde_json",
  "uuid 0.8.2",
- "uuid 1.4.1",
+ "uuid 1.6.1",
 ]
 
 [[package]]
@@ -3596,7 +3596,7 @@ dependencies = [
  "thirtyfour",
  "tokio",
  "url",
- "uuid 1.4.1",
+ "uuid 1.6.1",
  "validator",
 ]
 
@@ -3637,9 +3637,9 @@ checksum = "bc5cf98d8186244414c848017f0e2676b3fcb46807f6668a97dfe67359a3c4b7"
 
 [[package]]
 name = "uuid"
-version = "1.4.1"
+version = "1.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "79daa5ed5740825c40b389c5e50312b9c86df53fccd33f281df655642b43869d"
+checksum = "5e395fcf16a7a3d8127ec99782007af141946b4795001f876d54fb0d55978560"
 dependencies = [
  "atomic",
  "getrandom",
@@ -3652,9 +3652,9 @@ dependencies = [
 
 [[package]]
 name = "uuid-macro-internal"
-version = "1.4.1"
+version = "1.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f7e1ba1f333bd65ce3c9f27de592fcbc256dafe3af2717f56d7c87761fbaccf4"
+checksum = "f49e7f3f3db8040a100710a11932239fd30697115e2ba4107080d8252939845e"
 dependencies = [
  "proc-macro2",
  "quote",
