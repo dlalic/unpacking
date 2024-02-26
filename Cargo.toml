@@ -37,7 +37,7 @@ validator = { version = "0.16.0", features = ["derive"] }
 [dev-dependencies]
 async-trait = "0.1.77"
 cucumber = { version = "0.20.2", features = ["output-junit"] }
-fake = { version = "2.9.0", features = ["derive", "uuid", "chrono"] }
+fake = { version = "2.9.2", features = ["derive", "uuid", "chrono"] }
 image = { version = "0.24.8", features = ["png"] }
 mime = "0.3.16"
 openapi = { path = "./tests/client" }
