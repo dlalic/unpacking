@@ -3158,9 +3158,9 @@ dependencies = [
 
 [[package]]
 name = "thirtyfour"
-version = "0.32.0-rc.9"
+version = "0.32.0-rc.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b3be5b941002857c0d8a952c7d1cd8d3192488b02bd26f46261dfbc7c9d7514b"
+checksum = "bcc8d557d4ac49c0d0bf13722bf7414506ef50b28ac40894400dcd0b8ed25c4d"
 dependencies = [
  "async-trait",
  "base64 0.21.2",
