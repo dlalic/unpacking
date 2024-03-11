@@ -193,6 +193,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "604178f6c5c21f02dc555784810edfb88d34ac2c73b2eae109655649ee73ce3d"
 
 [[package]]
+name = "base64"
+version = "0.22.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9475866fec1451be56a3c2400fd081ff546538961565ccb5b7142cbd22bc7a51"
+
+[[package]]
 name = "base64ct"
 version = "1.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1137,12 +1143,12 @@ dependencies = [
 
 [[package]]
 name = "gotham"
-version = "0.7.2"
+version = "0.7.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7268678d44d73ca1e2dfba0afff286999245d24c2a1de05e4fe8809d0338db12"
+checksum = "fee74d50303a612882b7766d11a346c7e517ffa67ee6bdc71e6e4890fc766a90"
 dependencies = [
  "anyhow",
- "base64 0.21.2",
+ "base64 0.22.0",
  "bincode",
  "borrow-bag",
  "bytes",
