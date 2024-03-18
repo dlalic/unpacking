@@ -590,10 +590,10 @@ elm-review@^2.10.3:
     which "^2.0.2"
     wrap-ansi "^6.2.0"
 
-elm-spa@^6.0.4:
-  version "6.0.4"
-  resolved "https://registry.npmjs.org/elm-spa/-/elm-spa-6.0.4.tgz"
-  integrity sha512-TiOBuxL1SrzqYyWkime3AZ1/xFqKa6B/Bi4SplFg7YmlwPL5d7R+u6w0dxc14cnvmP1RS2+QZAkczZtqayFK9A==
+elm-spa@^6.0.6:
+  version "6.0.6"
+  resolved "https://registry.yarnpkg.com/elm-spa/-/elm-spa-6.0.6.tgz#de5fc59bbd4f96c8f6a4b3b21f344f48301f7dc0"
+  integrity sha512-FslLqKt2D5EjMJjtYU55P9xu/LGNnWL8pTzWAaOtTTFkNq2vVXFEknXRq1SCahicMEPRp+26r7NvawV+XuAxMA==
   dependencies:
     chokidar "3.4.2"
     mime "2.4.6"
