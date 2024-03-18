@@ -14,7 +14,7 @@
   "license": "MIT",
   "dependencies": {
     "elm": "^0.19.1",
-    "elm-spa": "^6.0.4"
+    "elm-spa": "^6.0.6"
   },
   "devDependencies": {
     "elm-format": "^0.8.5",
