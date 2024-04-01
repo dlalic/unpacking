@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 accept-language = "3.1.0"
 argon2 = "0.5.3"
-chrono = { version = "0.4.35", features = ["serde"] }
+chrono = { version = "0.4.37", features = ["serde"] }
 cron = "0.12.1"
 derive-getters = "0.3.0"
 diesel = { version = "2.1.4", features = ["postgres", "chrono", "uuid", "r2d2"] }
