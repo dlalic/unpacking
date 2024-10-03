@@ -1,4 +1,4 @@
-FROM rust:latest AS rust-builder
+FROM rust:1.81 AS rust-builder
 
 WORKDIR /usr/src/app
 COPY . .
@@ -13,7 +13,7 @@ RUN yarn install
 RUN yarn gen
 RUN yarn prod || true
 
-FROM debian:bullseye-slim
+FROM debian:bookworm-slim
 RUN apt-get update && apt-get install postgresql -y
 
 COPY --from=rust-builder /usr/src/app/target/release/unpacking /usr/local/bin
