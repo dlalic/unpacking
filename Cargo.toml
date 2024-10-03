@@ -6,50 +6,50 @@ edition = "2021"
 [dependencies]
 accept-language = "3.1.0"
 argon2 = "0.5.3"
-chrono = { version = "0.4.35", features = ["serde"] }
+chrono = { version = "0.4.38", features = ["serde"] }
 cron = "0.12.1"
-derive-getters = "0.3.0"
-diesel = { version = "2.1.4", features = ["postgres", "chrono", "uuid", "r2d2"] }
+derive-getters = "0.5.0"
+diesel = { version = "2.2.4", features = ["postgres", "chrono", "uuid", "r2d2"] }
 diesel-derive-enum = { version = "2.1.0", features = ["postgres"] }
-diesel_migrations = "2.1.0"
+diesel_migrations = "2.2.0"
 dotenv = "0.15.0"
-env_logger = "0.10.2"
+env_logger = "0.11.5"
 futures = "0.3.30"
-gotham = "0.7.3"
-gotham_derive = "0.7.0"
+gotham = "0.7.4"
+gotham_derive = "0.7.1"
 gotham_middleware_diesel = "0.5.1"
-gotham_restful = { version = "0.8.4", default-features = false, features = ["full"] }
-gotham_restful_derive = "0.8.3"
-jsonwebtoken = "9.2.0"
+gotham_restful = { version = "0.9.0", default-features = false, features = ["full"] }
+gotham_restful_derive = "0.9.0"
+jsonwebtoken = "9.3.0"
 language-tags = "0.3.2"
-log = "0.4.21"
-openapi_type = { version = "0.4.3", features = ["chrono", "uuid"] }
+log = "0.4.22"
+openapi_type = { version = "0.5.0", features = ["chrono", "uuid"] }
 r2d2 = "0.8.10"
 r2d2-diesel = "1.0.0"
-serde = "1.0.197"
-serde_json = "1.0.114"
-serde_derive = "1.0.126"
-tokio = "1.36.0"
-url = "2.5.0"
-uuid = { version = "1.4.1", features = ["serde", "v4", "fast-rng", "macro-diagnostics"] }
+serde = "1.0.210"
+serde_json = "1.0.128"
+serde_derive = "1.0.210"
+tokio = "1.40.0"
+url = "2.5.2"
+uuid = { version = "1.10.0", features = ["serde", "v4", "fast-rng", "macro-diagnostics"] }
 validator = { version = "0.16.0", features = ["derive"] }
 
 [dev-dependencies]
-async-trait = "0.1.77"
+async-trait = "0.1.83"
 cucumber = { version = "0.20.2", features = ["output-junit"] }
-fake = { version = "2.9.0", features = ["derive", "uuid", "chrono"] }
-image = { version = "0.24.9", features = ["png"] }
-mime = "0.3.16"
+fake = { version = "2.10.0", features = ["derive", "uuid", "chrono"] }
+image = { version = "0.25.2", features = ["png"] }
+mime = "0.3.17"
 openapi = { path = "./tests/client" }
 pixelmatch = "0.1.0"
-proptest = "1.4.0"
+proptest = "1.5.0"
 rand = "0.8.5"
 temp-env = "0.3.6"
-thirtyfour = { version = "0.32.0-rc.10"}
+thirtyfour = { version = "0.34.0"}
 
 [build-dependencies]
-serde = "1.0.197"
-serde_derive = "1.0.127"
-serde_json = "1.0.114"
+serde = "1.0.210"
+serde_derive = "1.0.210"
+serde_json = "1.0.128"
 json_typegen_shared = { version = "0.7.0", default-features = false, features = ["local-samples"] }
 
