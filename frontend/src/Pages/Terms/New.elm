@@ -43,7 +43,7 @@ type alias Model =
     { session : Auth.User
     , state : State
     , toCreate : NewTerm
-    , termsDropdown : Dropdown TermResponse
+    , termsDropdown : Dropdown
     }
 
 

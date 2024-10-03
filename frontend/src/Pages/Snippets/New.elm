@@ -46,8 +46,8 @@ type alias Model =
     , terms : Maybe (List TermResponse)
     , authors : Maybe (List AuthorResponse)
     , toCreate : NewSnippet
-    , authorsDropdown : Dropdown AuthorResponse
-    , termsDropdown : Dropdown TermResponse
+    , authorsDropdown : Dropdown
+    , termsDropdown : Dropdown
     }
 
 
@@ -120,7 +120,7 @@ update req storage msg model =
 
                 new : Set String
                 new =
-                    Set.fromList (String.split "," model.authorsDropdown.name)
+                    Set.fromList (String.split "," model.authorsDropdown.text)
 
                 existing : Set String
                 existing =

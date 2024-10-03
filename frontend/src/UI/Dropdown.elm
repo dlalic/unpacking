@@ -8,43 +8,38 @@ import UI.ColorPalette exposing (red)
 import UI.Layout exposing (scaled)
 
 
-type alias Dropdown a =
-    { model : Maybe { a | name : String }
-    , name : String
+type alias Dropdown =
+    { text : String
     , searchBox : SearchBox.State
     }
 
 
-initModel : Dropdown { a | name : String }
+initModel : Dropdown
 initModel =
-    { model = Nothing, name = "", searchBox = SearchBox.init }
+    { text = "", searchBox = SearchBox.init }
 
 
-updateModel : ChangeEvent { a | name : String } -> Dropdown { a | name : String } -> Dropdown { a | name : String }
+updateModel : ChangeEvent { a | name : String } -> Dropdown -> Dropdown
 updateModel changeEvent model =
     case changeEvent of
-        SearchBox.SelectionChanged m ->
-            { model | model = Just m }
+        SearchBox.SelectionChanged _ ->
+            { model | text = "" }
 
         SearchBox.TextChanged text ->
-            { model
-                | model = Nothing
-                , name = text
-                , searchBox = SearchBox.reset model.searchBox
-            }
+            { model | text = text, searchBox = SearchBox.reset model.searchBox }
 
         SearchBox.SearchBoxChanged subMsg ->
             { model | searchBox = SearchBox.update subMsg model.searchBox }
 
 
-dropdown : String -> Dropdown { a | name : String } -> List { a | name : String } -> (ChangeEvent { a | name : String } -> msg) -> List String -> Element msg
+dropdown : String -> Dropdown -> List { a | name : String } -> (ChangeEvent { a | name : String } -> msg) -> List String -> Element msg
 dropdown title model list onChange validation =
     column [ width fill, spacing 8 ]
         (row []
             [ SearchBox.input [ width fill ]
                 { onChange = onChange
-                , text = model.name
-                , selected = model.model
+                , text = model.text
+                , selected = Nothing
                 , options = Just list
                 , label = labelAbove [] (text title)
                 , placeholder = Nothing

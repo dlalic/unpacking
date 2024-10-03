@@ -50,7 +50,7 @@ type alias Model =
     , state : State
     , toUpdate : Maybe EditTerm
     , toDelete : Maybe Uuid
-    , termsDropdown : Dropdown TermResponse
+    , termsDropdown : Dropdown
     }
 
 

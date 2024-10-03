@@ -57,8 +57,8 @@ type alias Model =
     , toDelete : Maybe Uuid
     , terms : Maybe (List TermResponse)
     , authors : Maybe (List AuthorResponse)
-    , authorsDropdown : Dropdown AuthorResponse
-    , termsDropdown : Dropdown TermResponse
+    , authorsDropdown : Dropdown
+    , termsDropdown : Dropdown
     , currentPage : Int
     , term : Maybe ( Uuid, String )
     }
@@ -182,7 +182,7 @@ update req storage msg model =
 
                 new : Set String
                 new =
-                    Set.fromList (String.split "," model.authorsDropdown.name)
+                    Set.fromList (String.split "," model.authorsDropdown.text)
 
                 existing : Set String
                 existing =
