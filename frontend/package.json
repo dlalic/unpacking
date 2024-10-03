@@ -13,7 +13,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "elm": "^2.0.0",
+    "elm": "^0.19.1",
     "elm-spa": "^6.0.6"
   },
   "devDependencies": {

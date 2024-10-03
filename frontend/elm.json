@@ -30,7 +30,7 @@
             "rtfeldman/elm-iso8601-date-strings": "1.1.4",
             "rtfeldman/elm-validate": "4.0.2",
             "russelldavies/elm-ui-searchbox": "1.1.1",
-            "ryan-haskell/elm-spa": "6.0.6"
+            "ryannhg/elm-spa": "6.0.6"
         },
         "indirect": {
             "avh4/elm-fifo": "1.0.4",
