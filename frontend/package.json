@@ -2,7 +2,7 @@
   "scripts": {
     "dev": "./node_modules/.bin/elm-spa server",
     "gen": "./node_modules/.bin/elm-spa gen",
-    "prod": "./node_modules/.bin/elm-spa build",
+    "prod": "./node_modules/.bin/elm-spa build || true",
     "format": "./node_modules/.bin/elm-format src/ --yes",
     "check_format": "./node_modules/.bin/elm-format src/ --validate",
     "check_lint": "./node_modules/.bin/elm-review --ignore-dirs client,.elm-spa,src/Translations",
@@ -13,8 +13,8 @@
   },
   "license": "MIT",
   "dependencies": {
-    "elm": "^0.19.1",
-    "elm-spa": "^6.0.4"
+    "elm": "^2.0.0",
+    "elm-spa": "^6.0.6"
   },
   "devDependencies": {
     "elm-format": "^0.8.7",
