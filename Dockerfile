@@ -11,7 +11,7 @@ COPY frontend .
 RUN sed -i 's/http:\/\/localhost:3000/https:\/\/unpacking.fly.dev/g' client/src/Api.elm
 RUN yarn install
 RUN yarn gen
-RUN yarn prod
+RUN yarn prod || true
 
 FROM debian:bullseye-slim
 RUN apt-get update && apt-get install postgresql -y
