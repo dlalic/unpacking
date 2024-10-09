@@ -13,7 +13,7 @@
   "license": "MIT",
   "dependencies": {
     "elm": "^0.19.1",
-    "elm-spa": "^6.0.6"
+    "elm-land": "^0.20.1"
   },
   "devDependencies": {
     "elm-format": "^0.8.7",
