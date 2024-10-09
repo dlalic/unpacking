@@ -20,4 +20,4 @@ COPY --from=elm-builder /usr/src/app/public frontend/public
 COPY --from=elm-builder /usr/src/app/dist frontend/dist
 COPY --from=elm-builder /usr/src/app/translations frontend/translations
 
-CMD /bin/bash -c "/usr/local/bin/unpacking"s
+CMD /bin/bash -c "/usr/local/bin/unpacking"
