@@ -3,32 +3,40 @@ module Pages.SignIn exposing (Model, Msg, State, page)
 import Api
 import Api.Data exposing (CreateToken, TokenResponse)
 import Api.Request.Default exposing (createAuth)
+import Effect exposing (Effect)
 import Element exposing (Element, text)
 import Forms.SignInForm exposing (NewSignIn, defaultNew, newForm, newSignInValidator)
 import Forms.Validators exposing (ValidationField)
-import Gen.Params.SignIn exposing (Params)
-import Gen.Route as Route
 import Http
-import Page
+import Layouts
+import Page exposing (Page)
 import Problem
-import Request
+import Route exposing (Route)
 import Shared
-import Storage exposing (Storage)
 import Translations.Buttons exposing (signIn)
 import Translations.Labels exposing (loading, onError)
-import UI.Layout as Layout
 import Validate exposing (Valid, fromValid, validate)
 import View exposing (View)
 
 
-page : Shared.Model -> Request.With Params -> Page.With Model Msg
+page : Shared.Model -> Route () -> Page Model Msg
 page shared _ =
-    Page.element
+    Page.new
         { init = init
-        , update = update shared.storage
-        , view = view shared
+        , update = update
         , subscriptions = \_ -> Sub.none
+        , view = view shared
         }
+        |> Page.withLayout (layout shared)
+
+
+layout : Shared.Model -> Model -> Layouts.Layout Msg
+layout shared _ =
+    Layouts.Layout { shared = shared }
+
+
+
+-- INIT
 
 
 type alias Model =
@@ -43,9 +51,13 @@ type State
     | Errored String
 
 
-init : ( Model, Cmd Msg )
-init =
-    ( { state = Loaded, toCreate = defaultNew }, Cmd.none )
+init : () -> ( Model, Effect Msg )
+init () =
+    ( { state = Loaded, toCreate = defaultNew }, Effect.none )
+
+
+
+-- UPDATE
 
 
 type Msg
@@ -54,11 +66,11 @@ type Msg
     | TokenLoaded (Result Http.Error TokenResponse)
 
 
-update : Storage -> Msg -> Model -> ( Model, Cmd Msg )
-update storage msg model =
+update : Msg -> Model -> ( Model, Effect Msg )
+update msg model =
     case msg of
         Edit new ->
-            ( { model | toCreate = new }, Cmd.none )
+            ( { model | toCreate = new }, Effect.none )
 
         ClickedSubmit (Ok input) ->
             let
@@ -74,19 +86,23 @@ update storage msg model =
                 toCreate =
                     model.toCreate
             in
-            ( { model | toCreate = { toCreate | errors = list } }, Cmd.none )
+            ( { model | toCreate = { toCreate | errors = list } }, Effect.none )
 
         TokenLoaded (Ok response) ->
-            ( model, Storage.signIn { token = response.token, id = response.id, role = response.role } storage )
+            ( model, Effect.signIn { token = response.token, id = response.id, role = response.role } )
 
         TokenLoaded (Err err) ->
-            ( { model | state = Errored (Problem.toString err) }, Cmd.none )
+            ( { model | state = Errored (Problem.toString err) }, Effect.none )
+
+
+
+-- VIEW
 
 
 view : Shared.Model -> Model -> View Msg
 view shared model =
     { title = signIn shared.translations
-    , body = Layout.layout Route.SignIn shared (viewSignIn shared model)
+    , elements = viewSignIn shared model
     }
 
 
@@ -108,6 +124,10 @@ viewSignIn shared model =
             [ text (onError shared.translations reason) ]
 
 
-login : Model -> CreateToken -> ( Model, Cmd Msg )
+login : Model -> CreateToken -> ( Model, Effect Msg )
 login model request =
-    ( { model | state = Loading }, Api.send TokenLoaded (createAuth request) )
+    ( { model | state = Loading }, Effect.sendCmd (Api.send TokenLoaded (createAuth request)) )
+
+
+
+-- SUBSCRIPTIONS

@@ -7,16 +7,17 @@ import Auth
 import Browser.Dom as Dom
 import Browser.Events as Events
 import Color
+import Effect exposing (Effect)
 import Element exposing (Element, text)
 import Force
-import Gen.Route as Route
 import Graph exposing (Edge, Graph, Node, NodeContext, NodeId)
 import Http
-import Page
+import Layouts
+import Page exposing (Page)
 import Problem exposing (isUnauthenticated)
-import Request exposing (Request)
+import Route exposing (Route)
 import Shared
-import Storage exposing (Storage)
+import Shared.Model
 import Task
 import Translations.Labels exposing (loading, onError)
 import Translations.Titles exposing (home)
@@ -27,26 +28,32 @@ import TypedSvg.Core
 import TypedSvg.Types
 import UI.ColorPalette exposing (colorFromScale)
 import UI.Dimensions exposing (bodyHeight, bodyWidth)
-import UI.Layout as Layout
 import View exposing (View)
 import Zoom exposing (OnZoom, Zoom)
 
 
-page : Shared.Model -> Request -> Page.With Model Msg
-page shared _ =
-    Page.protected.element
-        (\session ->
-            { init = init session
-            , update = update shared.storage
-            , view = view shared
-            , subscriptions = subscriptions
-            }
-        )
+page : Auth.User -> Shared.Model -> Route () -> Page Model Msg
+page user shared _ =
+    Page.new
+        { init = init user
+        , update = update
+        , subscriptions = subscriptions
+        , view = view shared
+        }
+        |> Page.withLayout (layout shared)
+
+
+layout : Shared.Model -> Model -> Layouts.Layout Msg
+layout shared _ =
+    Layouts.Layout { shared = shared }
+
+
+
+-- INIT
 
 
 type alias Model =
-    { session : Auth.User
-    , state : State
+    { state : State
     , graphState : GraphState
     , selected : Maybe String
     }
@@ -84,9 +91,13 @@ type State
     | Errored String
 
 
-init : Auth.User -> ( Model, Cmd Msg )
-init session =
-    loadTerms session
+init : Auth.User -> () -> ( Model, Effect Msg )
+init user _ =
+    loadTerms user
+
+
+
+-- UPDATE
 
 
 type Msg
@@ -97,8 +108,8 @@ type Msg
     | ZoomMsg OnZoom
 
 
-update : Storage -> Msg -> Model -> ( Model, Cmd Msg )
-update storage msg model =
+update : Msg -> Model -> ( Model, Effect Msg )
+update msg model =
     let
         initNode : NodeContext String () -> NodeContext Entity ()
         initNode ctx =
@@ -130,7 +141,7 @@ update storage msg model =
             Zoom.init { width = element.width, height = element.height }
                 |> Zoom.scaleExtent 0.1 2
 
-        handleTick : ReadyState -> ( Model, Cmd Msg )
+        handleTick : ReadyState -> ( Model, Effect Msg )
         handleTick state =
             let
                 ( newSimulation, list ) =
@@ -145,7 +156,7 @@ update storage msg model =
                             , simulation = newSimulation
                         }
               }
-            , Cmd.none
+            , Effect.none
             )
 
         updateContextWithValue : NodeContext Entity () -> Entity -> NodeContext Entity ()
@@ -186,10 +197,10 @@ update storage msg model =
 
         TermsLoaded (Err err) ->
             if isUnauthenticated err then
-                ( model, Storage.signOut storage )
+                ( model, Effect.signOut )
 
             else
-                ( { model | state = Errored (Problem.toString err) }, Cmd.none )
+                ( { model | state = Errored (Problem.toString err) }, Effect.none )
 
         ReceiveElementPosition (Ok { element }) ->
             case model.graphState of
@@ -208,7 +219,7 @@ update storage msg model =
                                 , zoom = initZoom element
                                 }
                       }
-                    , Cmd.none
+                    , Effect.none
                     )
 
                 Init graph ->
@@ -226,11 +237,11 @@ update storage msg model =
                                 , zoom = initZoom element
                                 }
                       }
-                    , Cmd.none
+                    , Effect.none
                     )
 
         ReceiveElementPosition (Err _) ->
-            ( model, Cmd.none )
+            ( model, Effect.none )
 
         Resize ->
             ( model, getElementPosition )
@@ -241,23 +252,27 @@ update storage msg model =
                     handleTick state
 
                 Init _ ->
-                    ( model, Cmd.none )
+                    ( model, Effect.none )
 
         ZoomMsg zoomMsg ->
             case model.graphState of
                 Ready state ->
                     ( { model | graphState = Ready { state | zoom = Zoom.update zoomMsg state.zoom } }
-                    , Cmd.none
+                    , Effect.none
                     )
 
                 Init _ ->
-                    ( model, Cmd.none )
+                    ( model, Effect.none )
+
+
+
+-- VIEW
 
 
 view : Shared.Model -> Model -> View Msg
 view shared model =
     { title = home shared.translations
-    , body = Layout.layout Route.Home_ shared (viewTerms shared model)
+    , elements = viewTerms shared model
     }
 
 
@@ -279,7 +294,7 @@ elementId =
     "graph"
 
 
-viewGraph : Shared.Window -> Model -> Element Msg
+viewGraph : Shared.Model.Window -> Model -> Element Msg
 viewGraph window model =
     let
         zoomEvents : List (TypedSvg.Core.Attribute Msg)
@@ -403,6 +418,27 @@ linkElement graph edge =
         []
 
 
+loadTerms : Auth.User -> ( Model, Effect Msg )
+loadTerms user =
+    let
+        graph : Graph Entity ()
+        graph =
+            Graph.fromNodeLabelsAndEdgePairs [] []
+    in
+    ( { state = Loading, selected = Nothing, graphState = Init graph }
+    , Effect.sendCmd (Api.send TermsLoaded (termsGraphGet user.token))
+    )
+
+
+getElementPosition : Effect Msg
+getElementPosition =
+    Effect.sendCmd (Task.attempt ReceiveElementPosition (Dom.getElement elementId))
+
+
+
+-- SUBSCRIPTIONS
+
+
 subscriptions : Model -> Sub Msg
 subscriptions model =
     let
@@ -426,18 +462,3 @@ subscriptions model =
                 readySubscriptions state
         , Events.onResize (\_ _ -> Resize)
         ]
-
-
-loadTerms : Auth.User -> ( Model, Cmd Msg )
-loadTerms session =
-    let
-        graph : Graph Entity ()
-        graph =
-            Graph.fromNodeLabelsAndEdgePairs [] []
-    in
-    ( { session = session, state = Loading, selected = Nothing, graphState = Init graph }, Api.send TermsLoaded (termsGraphGet session.token) )
-
-
-getElementPosition : Cmd Msg
-getElementPosition =
-    Task.attempt ReceiveElementPosition (Dom.getElement elementId)

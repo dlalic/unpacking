@@ -1,24 +1,36 @@
-module Auth exposing
-    ( User
-    , beforeProtectedInit
-    )
+module Auth exposing (User, onPageLoad, viewCustomPage)
 
-import Domain.Session
-import ElmSpa.Page as ElmSpa
-import Gen.Route exposing (Route)
-import Request exposing (Request)
+import Auth.Action
+import Dict
+import Route exposing (Route)
+import Route.Path
 import Shared
+import Shared.Model
+import Translations.Labels exposing (loading)
+import View exposing (View)
 
 
 type alias User =
-    Domain.Session.Session
+    Shared.Model.User
 
 
-beforeProtectedInit : Shared.Model -> Request -> ElmSpa.Protected User Route
-beforeProtectedInit { storage } _ =
-    case storage.session of
-        Just session ->
-            ElmSpa.Provide session
+onPageLoad : Shared.Model -> Route () -> Auth.Action.Action User
+onPageLoad shared route =
+    case shared.user of
+        Just user ->
+            Auth.Action.loadPageWithUser user
 
         Nothing ->
-            ElmSpa.RedirectTo Gen.Route.SignIn
+            Auth.Action.pushRoute
+                { path = Route.Path.SignIn
+                , query =
+                    Dict.fromList
+                        [ ( "from", route.url.path )
+                        ]
+                , hash = Nothing
+                }
+
+
+viewCustomPage : Shared.Model -> Route () -> View Never
+viewCustomPage shared _ =
+    View.fromString (loading shared.translations)

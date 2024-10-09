@@ -1,12 +1,11 @@
 # Frontend
 
-> 🌳  built with [elm-spa](https://elm-spa.dev)
+Built with [elm-land](https://elm.land)
 
 ## Install
 
 ```
 yarn
-yarn gen
 ```
 
 ## Run

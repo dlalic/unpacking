@@ -2,93 +2,123 @@ module Shared exposing
     ( Flags
     , Model
     , Msg
-    , Window
+    , decoder
     , init
     , subscriptions
     , update
     )
 
 import Api
-import Api.Data exposing (encodeTranslation)
+import Api.Data exposing (encodeTranslation, roleDecoder)
 import Api.Request.Default exposing (readAllTranslations)
 import Browser.Events as Events
-import Gen.Route
-import Http
+import Dict
+import Effect exposing (Effect)
 import I18Next exposing (Translations, initialTranslations, translationsDecoder)
-import Json.Decode as Decode
-import Json.Encode as Encode
-import Request exposing (Request)
-import Storage exposing (Storage)
+import Json.Decode
+import Json.Encode
+import Route exposing (Route)
+import Route.Path
+import Shared.Model
+import Shared.Msg exposing (Msg(..))
+import Uuid
+
+
+
+-- FLAGS
 
 
 type alias Flags =
-    { width : Int
+    { user : Maybe Shared.Model.User
+    , width : Int
     , height : Int
-    , storage : Decode.Value
     }
+
+
+decoder : Json.Decode.Decoder Flags
+decoder =
+    Json.Decode.map3 Flags
+        (Json.Decode.field "user" (Json.Decode.maybe userDecoder))
+        (Json.Decode.field "width" Json.Decode.int)
+        (Json.Decode.field "height" Json.Decode.int)
+
+
+userDecoder : Json.Decode.Decoder Shared.Model.User
+userDecoder =
+    Json.Decode.map3 Shared.Model.User
+        (Json.Decode.field "token" Json.Decode.string)
+        (Json.Decode.field "id" Uuid.decoder)
+        (Json.Decode.field "role" roleDecoder)
+
+
+
+-- INIT
 
 
 type alias Model =
-    { storage : Storage
-    , translations : Translations
-    , window : Window
-    }
+    Shared.Model.Model
 
 
-type alias Window =
-    { width : Int, height : Int }
-
-
-init : Request -> Flags -> ( Model, Cmd Msg )
-init req flags =
+init : Result Json.Decode.Error Flags -> Route () -> ( Model, Effect Msg )
+init flagsResult route =
     let
-        model : Model
-        model =
-            { storage = Storage.fromJson flags.storage, translations = initialTranslations, window = { width = flags.width, height = flags.height } }
+        flags : Flags
+        flags =
+            flagsResult
+                |> Result.withDefault { user = Nothing, width = 0, height = 0 }
     in
-    ( model
-    , if model.storage.session /= Nothing && req.route == Gen.Route.SignIn then
-        Request.replaceRoute Gen.Route.SignIn req
-
-      else if model.translations == initialTranslations then
-        loadTranslations
-
-      else
-        Cmd.none
+    ( { user = flags.user, translations = initialTranslations, window = { width = flags.width, height = flags.height } }
+    , Effect.sendCmd loadTranslations
     )
 
 
-type Msg
-    = StorageUpdated Storage
-    | LoadedTranslations (Result Http.Error Translations)
-    | SetScreenSize Int Int
+
+-- UPDATE
 
 
-update : Request -> Msg -> Model -> ( Model, Cmd Msg )
-update req msg model =
+type alias Msg =
+    Shared.Msg.Msg
+
+
+update : Route () -> Msg -> Model -> ( Model, Effect Msg )
+update _ msg model =
     case msg of
-        StorageUpdated storage ->
-            ( { model | storage = storage }
-            , if Gen.Route.SignIn == req.route then
-                Request.pushRoute Gen.Route.Home_ req
-
-              else
-                Cmd.none
+        Shared.Msg.SignIn user ->
+            ( { model | user = Just user }
+            , Effect.batch
+                [ Effect.pushRoute
+                    { path = Route.Path.Home_
+                    , query = Dict.empty
+                    , hash = Nothing
+                    }
+                , Effect.saveUser user
+                ]
             )
 
+        Shared.Msg.SignOut ->
+            ( { model | user = Nothing }, Effect.clearUser )
+
         LoadedTranslations (Ok translations) ->
-            ( { model | translations = translations }, Cmd.none )
+            ( { model | translations = translations }, Effect.none )
 
         LoadedTranslations (Err _) ->
-            ( model, Cmd.none )
+            ( model, Effect.none )
 
         SetScreenSize x y ->
-            ( { model | window = { width = x, height = y } }, Cmd.none )
+            ( { model | window = { width = x, height = y } }, Effect.none )
 
 
-subscriptions : Request -> Model -> Sub Msg
+
+-- SUBSCRIPTIONS
+
+
+subscriptions : Route () -> Model -> Sub Msg
 subscriptions _ _ =
-    Sub.batch [ Events.onResize (\values -> SetScreenSize values), Storage.load StorageUpdated ]
+    Events.onResize (\values -> SetScreenSize values)
+
+
+
+-- TRANSLATIONS
 
 
 loadTranslations : Cmd Msg
@@ -99,11 +129,11 @@ loadTranslations =
 mapTranslations : Api.Data.Translation -> Translations
 mapTranslations input =
     let
-        encodedJson : Encode.Value
+        encodedJson : Json.Encode.Value
         encodedJson =
             encodeTranslation input
     in
-    case Decode.decodeValue translationsDecoder encodedJson of
+    case Json.Decode.decodeValue translationsDecoder encodedJson of
         Ok value ->
             value
 

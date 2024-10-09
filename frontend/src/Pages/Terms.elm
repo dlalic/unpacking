@@ -4,21 +4,21 @@ import Api
 import Api.Data exposing (Role(..), TermResponse, UpdateTerm)
 import Api.Request.Default exposing (deleteTerms, readAllTerms, updateTerms)
 import Auth
-import Browser.Navigation
 import Common exposing (uuidFromString)
 import Dict
+import Effect exposing (Effect)
 import Element exposing (Element, paragraph, text)
 import Element.Font as Font
 import Forms.TermForm exposing (EditTerm, editForm, editTermValidator)
 import Forms.Validators exposing (ValidationField)
-import Gen.Route as Route
 import Http
-import Page
+import Layouts
+import Page exposing (Page)
 import Problem exposing (isUnauthenticated)
-import Request exposing (Request)
+import Route exposing (Route)
+import Route.Path
 import SearchBox exposing (ChangeEvent(..))
 import Shared
-import Storage exposing (Storage)
 import Translations.Buttons exposing (delete, edit, newTerm)
 import Translations.Forms exposing (related)
 import Translations.Labels exposing (loading, onError)
@@ -27,27 +27,33 @@ import UI.Button exposing (defaultButton)
 import UI.Card exposing (keyedCard)
 import UI.Dialog exposing (defaultDialog)
 import UI.Dropdown exposing (Dropdown, dropdown, initModel, updateModel)
-import UI.Layout as Layout
 import Uuid exposing (Uuid)
 import Validate exposing (Valid, fromValid, validate)
 import View exposing (View)
 
 
-page : Shared.Model -> Request -> Page.With Model Msg
-page shared req =
-    Page.protected.element
-        (\session ->
-            { init = init session
-            , update = update req shared.storage
-            , view = view shared
-            , subscriptions = \_ -> Sub.none
-            }
-        )
+page : Auth.User -> Shared.Model -> Route () -> Page Model Msg
+page user shared _ =
+    Page.new
+        { init = init user
+        , update = update user
+        , subscriptions = \_ -> Sub.none
+        , view = view user shared
+        }
+        |> Page.withLayout (layout shared)
+
+
+layout : Shared.Model -> Model -> Layouts.Layout Msg
+layout shared _ =
+    Layouts.Layout { shared = shared }
+
+
+
+-- INIT
 
 
 type alias Model =
-    { session : Auth.User
-    , state : State
+    { state : State
     , toUpdate : Maybe EditTerm
     , toDelete : Maybe Uuid
     , termsDropdown : Dropdown
@@ -60,9 +66,13 @@ type State
     | Errored String
 
 
-init : Auth.User -> ( Model, Cmd Msg )
-init session =
-    loadTerms session
+init : Auth.User -> () -> ( Model, Effect Msg )
+init user _ =
+    loadTerms user
+
+
+
+-- UPDATE
 
 
 type Msg
@@ -80,58 +90,74 @@ type Msg
     | ClickedSubmitDelete
 
 
-update : Request -> Storage -> Msg -> Model -> ( Model, Cmd Msg )
-update req storage msg model =
+update : Auth.User -> Msg -> Model -> ( Model, Effect Msg )
+update user msg model =
     case msg of
         TermsLoaded (Ok list) ->
-            ( { model | state = Loaded list }, Cmd.none )
+            ( { model | state = Loaded list }, Effect.none )
 
         TermsLoaded (Err err) ->
             if isUnauthenticated err then
-                ( model, Storage.signOut storage )
+                ( model, Effect.signOut )
 
             else
-                ( { model | state = Errored (Problem.toString err) }, Cmd.none )
+                ( { model | state = Errored (Problem.toString err) }, Effect.none )
 
         TermDeleted (Ok _) ->
-            loadTerms model.session
+            loadTerms user
 
         TermDeleted (Err err) ->
             if isUnauthenticated err then
-                ( model, Storage.signOut storage )
+                ( model, Effect.signOut )
 
             else
-                ( { model | state = Errored (Problem.toString err) }, Cmd.none )
+                ( { model | state = Errored (Problem.toString err) }, Effect.none )
 
         UpdateTerm (Ok _) ->
-            loadTerms model.session
+            loadTerms user
 
         UpdateTerm (Err err) ->
             if isUnauthenticated err then
-                ( model, Storage.signOut storage )
+                ( model, Effect.signOut )
 
             else
-                ( { model | state = Errored (Problem.toString err) }, Cmd.none )
+                ( { model | state = Errored (Problem.toString err) }, Effect.none )
 
         ClickedNew ->
-            ( model, Request.pushRoute Route.Terms__New req )
+            ( model
+            , Effect.pushRoute
+                { path = Route.Path.Terms_New
+                , query = Dict.empty
+                , hash = Nothing
+                }
+            )
 
         ClickedSnippets term ->
-            ( model, Browser.Navigation.pushUrl req.key (Route.toHref Route.Snippets ++ "?termID=" ++ Uuid.toString term.id ++ "&name=" ++ term.name) )
+            ( model
+            , Effect.pushRoute
+                { path = Route.Path.Snippets
+                , query =
+                    Dict.fromList
+                        [ ( "termID", Uuid.toString term.id )
+                        , ( "name", term.name )
+                        ]
+                , hash = Nothing
+                }
+            )
 
         Edit term ->
-            ( { model | toUpdate = Just term }, Cmd.none )
+            ( { model | toUpdate = Just term }, Effect.none )
 
         ChangedDropdown changeEvent ->
             case ( model.toUpdate, changeEvent ) of
                 ( Just toUpdate, SelectionChanged sth ) ->
-                    ( { model | termsDropdown = updateModel (TextChanged "") model.termsDropdown, toUpdate = Just { toUpdate | related = Dict.insert (Uuid.toString sth.id) sth.name toUpdate.related } }, Cmd.none )
+                    ( { model | termsDropdown = updateModel (TextChanged "") model.termsDropdown, toUpdate = Just { toUpdate | related = Dict.insert (Uuid.toString sth.id) sth.name toUpdate.related } }, Effect.none )
 
                 _ ->
-                    ( { model | termsDropdown = updateModel changeEvent model.termsDropdown }, Cmd.none )
+                    ( { model | termsDropdown = updateModel changeEvent model.termsDropdown }, Effect.none )
 
         ClickedCancelEdit ->
-            ( { model | toUpdate = Nothing }, Cmd.none )
+            ( { model | toUpdate = Nothing }, Effect.none )
 
         ClickedSubmitEdit (Ok input) ->
             let
@@ -139,47 +165,50 @@ update req storage msg model =
                 valid =
                     fromValid input
             in
-            updateTerm model.session valid.id { name = valid.name, related = List.concatMap uuidFromString (Dict.keys valid.related) }
+            updateTerm user valid.id { name = valid.name, related = List.concatMap uuidFromString (Dict.keys valid.related) }
 
         ClickedSubmitEdit (Err list) ->
             case model.toUpdate of
                 Just some ->
-                    ( { model | toUpdate = Just { some | errors = list } }, Cmd.none )
+                    ( { model | toUpdate = Just { some | errors = list } }, Effect.none )
 
                 _ ->
-                    ( model, Cmd.none )
+                    ( model, Effect.none )
 
         ClickedDelete id ->
-            ( { model | toDelete = Just id }, Cmd.none )
+            ( { model | toDelete = Just id }, Effect.none )
 
         ClickedCancelDelete ->
-            ( { model | toDelete = Nothing }, Cmd.none )
+            ( { model | toDelete = Nothing }, Effect.none )
 
         ClickedSubmitDelete ->
             case model.toDelete of
                 Just id ->
-                    deleteTerm model.session id
+                    deleteTerm user id
 
                 Nothing ->
-                    ( model, Cmd.none )
+                    ( model, Effect.none )
 
 
-view : Shared.Model -> Model -> View Msg
-view shared model =
+
+-- VIEW
+
+
+view : Auth.User -> Shared.Model -> Model -> View Msg
+view user shared model =
     { title = terms shared.translations
-    , body =
-        Layout.layout Route.Terms shared (viewTerms shared model)
+    , elements = viewTerms user shared model
     }
 
 
-viewTerms : Shared.Model -> Model -> List (Element Msg)
-viewTerms shared model =
+viewTerms : Auth.User -> Shared.Model -> Model -> List (Element Msg)
+viewTerms user shared model =
     case model.state of
         Loading ->
             [ text (loading shared.translations) ]
 
         Loaded terms ->
-            case ( model.session.role, model.toUpdate, model.toDelete ) of
+            case ( user.role, model.toUpdate, model.toDelete ) of
                 ( RoleAdmin, Just toUpdate, _ ) ->
                     [ editTerm shared toUpdate model terms ]
 
@@ -264,24 +293,24 @@ editTerm shared term model terms =
     editForm shared.translations term dd Edit ClickedCancelEdit submit
 
 
-deleteTerm : Auth.User -> Uuid -> ( Model, Cmd Msg )
+deleteTerm : Auth.User -> Uuid -> ( Model, Effect Msg )
 deleteTerm session id =
-    ( { session = session, state = Loading, toUpdate = Nothing, toDelete = Nothing, termsDropdown = initModel }
-    , Api.send TermDeleted (deleteTerms id session.token)
+    ( { state = Loading, toUpdate = Nothing, toDelete = Nothing, termsDropdown = initModel }
+    , Effect.sendCmd (Api.send TermDeleted (deleteTerms id session.token))
     )
 
 
-updateTerm : Auth.User -> Uuid -> UpdateTerm -> ( Model, Cmd Msg )
+updateTerm : Auth.User -> Uuid -> UpdateTerm -> ( Model, Effect Msg )
 updateTerm session id term =
-    ( { session = session, state = Loading, toUpdate = Nothing, toDelete = Nothing, termsDropdown = initModel }
-    , Api.send UpdateTerm (updateTerms id term session.token)
+    ( { state = Loading, toUpdate = Nothing, toDelete = Nothing, termsDropdown = initModel }
+    , Effect.sendCmd (Api.send UpdateTerm (updateTerms id term session.token))
     )
 
 
-loadTerms : Auth.User -> ( Model, Cmd Msg )
+loadTerms : Auth.User -> ( Model, Effect Msg )
 loadTerms session =
-    ( { session = session, state = Loading, toUpdate = Nothing, toDelete = Nothing, termsDropdown = initModel }
-    , Api.send TermsLoaded (readAllTerms session.token)
+    ( { state = Loading, toUpdate = Nothing, toDelete = Nothing, termsDropdown = initModel }
+    , Effect.sendCmd (Api.send TermsLoaded (readAllTerms session.token))
     )
 
 
@@ -293,3 +322,7 @@ editTermFromTerm model all =
     , related = List.foldl (\id dict -> Dict.insert (Uuid.toString id) (termsToText all id) dict) Dict.empty model.related
     , errors = []
     }
+
+
+
+-- SUBSCRIPTIONS

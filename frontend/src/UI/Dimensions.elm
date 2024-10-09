@@ -1,7 +1,12 @@
-module UI.Dimensions exposing (bodyHeight, bodyWidth, defaultPadding, defaultSpacing, fillMaxViewWidth, footerHeightInPx, headerHeightInPx, smallScreenWidth)
+module UI.Dimensions exposing (bodyHeight, bodyWidth, defaultPadding, defaultSpacing, fillMaxViewWidth, footerHeightInPx, headerHeightInPx, scaled, smallScreenWidth)
 
 import Element exposing (Attribute, Length, fill, maximum, px, width)
-import Shared exposing (Window)
+import Shared.Model exposing (Window)
+
+
+scaled : Int -> Int
+scaled n =
+    ceiling (Element.modular 16 1.25 n)
 
 
 maxViewWidth : Int

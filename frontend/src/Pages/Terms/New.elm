@@ -6,42 +6,49 @@ import Api.Request.Default exposing (createTerms, readAllTerms)
 import Auth
 import Common exposing (uuidFromString)
 import Dict
+import Effect exposing (Effect)
 import Element exposing (Element, text)
 import Forms.TermForm exposing (NewTerm, defaultNew, newForm, newTermValidator)
 import Forms.Validators exposing (ValidationField)
-import Gen.Route as Route
 import Http
-import Page
+import Layouts
+import Page exposing (Page)
 import Problem exposing (isUnauthenticated)
-import Request exposing (Request)
+import Route exposing (Route)
+import Route.Path
 import SearchBox exposing (ChangeEvent(..))
 import Shared
-import Storage exposing (Storage)
 import Translations.Buttons exposing (newTerm)
 import Translations.Forms exposing (related)
 import Translations.Labels exposing (loading, onError)
 import UI.Dropdown exposing (Dropdown, dropdown, initModel, updateModel)
-import UI.Layout as Layout
 import Uuid exposing (Uuid)
 import Validate exposing (Valid, fromValid, validate)
 import View exposing (View)
 
 
-page : Shared.Model -> Request -> Page.With Model Msg
-page shared req =
-    Page.protected.element
-        (\session ->
-            { init = init session
-            , update = update req shared.storage
-            , view = view shared
-            , subscriptions = \_ -> Sub.none
-            }
-        )
+page : Auth.User -> Shared.Model -> Route () -> Page Model Msg
+page user shared _ =
+    Page.new
+        { init = init user
+        , update = update user
+        , subscriptions = \_ -> Sub.none
+        , view = view shared
+        }
+        |> Page.withLayout (layout shared)
+
+
+layout : Shared.Model -> Model -> Layouts.Layout Msg
+layout shared _ =
+    Layouts.Layout { shared = shared }
+
+
+
+-- INIT
 
 
 type alias Model =
-    { session : Auth.User
-    , state : State
+    { state : State
     , toCreate : NewTerm
     , termsDropdown : Dropdown
     }
@@ -53,9 +60,13 @@ type State
     | Errored String
 
 
-init : Auth.User -> ( Model, Cmd Msg )
-init session =
-    loadTerms session
+init : Auth.User -> () -> ( Model, Effect Msg )
+init user _ =
+    loadTerms user
+
+
+
+-- UPDATE
 
 
 type Msg
@@ -67,24 +78,30 @@ type Msg
     | Created (Result Http.Error Uuid)
 
 
-update : Request -> Storage -> Msg -> Model -> ( Model, Cmd Msg )
-update req storage msg model =
+update : Auth.User -> Msg -> Model -> ( Model, Effect Msg )
+update user msg model =
     case msg of
         TermsLoaded (Ok list) ->
-            ( { model | state = Loaded list }, Cmd.none )
+            ( { model | state = Loaded list }, Effect.none )
 
         TermsLoaded (Err err) ->
             if isUnauthenticated err then
-                ( model, Storage.signOut storage )
+                ( model, Effect.signOut )
 
             else
-                ( { model | state = Errored (Problem.toString err) }, Cmd.none )
+                ( { model | state = Errored (Problem.toString err) }, Effect.none )
 
         Edit new ->
-            ( { model | toCreate = new }, Cmd.none )
+            ( { model | toCreate = new }, Effect.none )
 
         ClickedCancel ->
-            ( model, Request.pushRoute Route.Terms req )
+            ( model
+            , Effect.pushRoute
+                { path = Route.Path.Terms
+                , query = Dict.empty
+                , hash = Nothing
+                }
+            )
 
         ClickedSubmit (Ok input) ->
             let
@@ -92,7 +109,7 @@ update req storage msg model =
                 valid =
                     fromValid input
             in
-            createTerm model { name = valid.name, related = List.concatMap uuidFromString (Dict.keys valid.related) }
+            createTerm user model { name = valid.name, related = List.concatMap uuidFromString (Dict.keys valid.related) }
 
         ClickedSubmit (Err list) ->
             let
@@ -100,17 +117,23 @@ update req storage msg model =
                 toCreate =
                     model.toCreate
             in
-            ( { model | toCreate = { toCreate | errors = list } }, Cmd.none )
+            ( { model | toCreate = { toCreate | errors = list } }, Effect.none )
 
         Created (Ok _) ->
-            ( model, Request.pushRoute Route.Terms req )
+            ( model
+            , Effect.pushRoute
+                { path = Route.Path.Terms
+                , query = Dict.empty
+                , hash = Nothing
+                }
+            )
 
         Created (Err err) ->
             if isUnauthenticated err then
-                ( model, Storage.signOut storage )
+                ( model, Effect.signOut )
 
             else
-                ( { model | state = Errored (Problem.toString err) }, Cmd.none )
+                ( { model | state = Errored (Problem.toString err) }, Effect.none )
 
         ChangedDropdown changeEvent ->
             let
@@ -120,16 +143,20 @@ update req storage msg model =
             in
             case changeEvent of
                 SelectionChanged sth ->
-                    ( { model | termsDropdown = updateModel (TextChanged "") model.termsDropdown, toCreate = { toCreate | related = Dict.insert (Uuid.toString sth.id) sth.name model.toCreate.related } }, Cmd.none )
+                    ( { model | termsDropdown = updateModel (TextChanged "") model.termsDropdown, toCreate = { toCreate | related = Dict.insert (Uuid.toString sth.id) sth.name model.toCreate.related } }, Effect.none )
 
                 _ ->
-                    ( { model | termsDropdown = updateModel changeEvent model.termsDropdown }, Cmd.none )
+                    ( { model | termsDropdown = updateModel changeEvent model.termsDropdown }, Effect.none )
+
+
+
+-- VIEW
 
 
 view : Shared.Model -> Model -> View Msg
 view shared model =
     { title = newTerm shared.translations
-    , body = Layout.layout Route.Terms__New shared (viewForm shared model)
+    , elements = viewForm shared model
     }
 
 
@@ -155,11 +182,19 @@ viewForm shared model =
             [ text (onError shared.translations reason) ]
 
 
-loadTerms : Auth.User -> ( Model, Cmd Msg )
+loadTerms : Auth.User -> ( Model, Effect Msg )
 loadTerms session =
-    ( { session = session, state = Loading, toCreate = defaultNew, termsDropdown = initModel }, Api.send TermsLoaded (readAllTerms session.token) )
+    ( { state = Loading, toCreate = defaultNew, termsDropdown = initModel }
+    , Effect.sendCmd (Api.send TermsLoaded (readAllTerms session.token))
+    )
 
 
-createTerm : Model -> CreateTerm -> ( Model, Cmd Msg )
-createTerm model term =
-    ( { model | state = Loading }, Api.send Created (createTerms term model.session.token) )
+createTerm : Auth.User -> Model -> CreateTerm -> ( Model, Effect Msg )
+createTerm user model term =
+    ( { model | state = Loading }
+    , Effect.sendCmd (Api.send Created (createTerms term user.token))
+    )
+
+
+
+-- SUBSCRIPTIONS

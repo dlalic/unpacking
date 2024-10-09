@@ -1,53 +1,81 @@
 module Pages.SignOut exposing (Model, Msg, page)
 
+import Auth
+import Dict
+import Effect exposing (Effect)
 import Element exposing (Element, text)
-import Gen.Params.SignOut exposing (Params)
-import Gen.Route as Route
-import Page
-import Request exposing (Request)
+import Layouts
+import Page exposing (Page)
+import Route exposing (Route)
+import Route.Path
 import Shared
-import Storage exposing (Storage)
 import Translations.Buttons exposing (signIn, signOut)
 import Translations.Labels exposing (onSignOut)
 import UI.Button exposing (defaultButton)
-import UI.Layout as Layout
 import View exposing (View)
 
 
-page : Shared.Model -> Request.With Params -> Page.With Model Msg
-page shared req =
-    Page.element
-        { init = init shared.storage
-        , update = update req
-        , view = view shared
+page : Auth.User -> Shared.Model -> Route () -> Page Model Msg
+page _ shared route =
+    Page.new
+        { init = init
+        , update = update route
         , subscriptions = \_ -> Sub.none
+        , view = view shared
         }
+        |> Page.withLayout (layout shared)
+
+
+layout : Shared.Model -> Model -> Layouts.Layout Msg
+layout shared _ =
+    Layouts.Layout { shared = shared }
+
+
+
+-- INIT
 
 
 type alias Model =
     {}
 
 
-init : Storage -> ( Model, Cmd Msg )
-init storage =
-    ( {}, Storage.signOut storage )
+init : () -> ( Model, Effect Msg )
+init () =
+    ( {}, Effect.signOut )
+
+
+
+-- UPDATE
 
 
 type Msg
     = ClickedSignIn
 
 
-update : Request -> Msg -> Model -> ( Model, Cmd Msg )
-update req msg model =
+update : Route () -> Msg -> Model -> ( Model, Effect Msg )
+update route msg model =
     case msg of
         ClickedSignIn ->
-            ( model, Request.pushRoute Route.SignIn req )
+            ( model
+            , Effect.pushRoute
+                { path =
+                    Dict.get "from" route.query
+                        |> Maybe.andThen Route.Path.fromString
+                        |> Maybe.withDefault Route.Path.Home_
+                , query = Dict.empty
+                , hash = Nothing
+                }
+            )
+
+
+
+-- VIEW
 
 
 view : Shared.Model -> Model -> View Msg
 view shared _ =
     { title = signOut shared.translations
-    , body = Layout.layout Route.SignOut shared (viewSignOut shared)
+    , elements = viewSignOut shared
     }
 
 
@@ -56,3 +84,7 @@ viewSignOut shared =
     [ text (onSignOut shared.translations)
     , defaultButton (signIn shared.translations) ClickedSignIn
     ]
+
+
+
+-- SUBSCRIPTIONS
