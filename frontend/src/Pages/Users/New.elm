@@ -4,39 +4,47 @@ import Api
 import Api.Data exposing (CreateUser)
 import Api.Request.Default exposing (createUsers)
 import Auth
+import Dict
+import Effect exposing (Effect)
 import Element exposing (Element, text)
 import Forms.UserForm exposing (NewUser, defaultNew, newForm, newUserValidator)
 import Forms.Validators exposing (ValidationField)
-import Gen.Route as Route
 import Http
-import Page
+import Layouts
+import Page exposing (Page)
 import Problem exposing (isUnauthenticated)
-import Request exposing (Request)
+import Route exposing (Route)
+import Route.Path
 import Shared
-import Storage exposing (Storage)
 import Translations.Buttons exposing (newUser)
 import Translations.Labels exposing (loading, onError)
-import UI.Layout as Layout
 import Uuid exposing (Uuid)
 import Validate exposing (Valid, fromValid, validate)
 import View exposing (View)
 
 
-page : Shared.Model -> Request -> Page.With Model Msg
-page shared req =
-    Page.protected.element
-        (\session ->
-            { init = init session
-            , update = update req shared.storage
-            , view = view shared
-            , subscriptions = \_ -> Sub.none
-            }
-        )
+page : Auth.User -> Shared.Model -> Route () -> Page Model Msg
+page user shared _ =
+    Page.new
+        { init = init
+        , update = update user
+        , subscriptions = \_ -> Sub.none
+        , view = view shared
+        }
+        |> Page.withLayout (layout shared)
+
+
+layout : Shared.Model -> Model -> Layouts.Layout Msg
+layout shared _ =
+    Layouts.Layout { shared = shared }
+
+
+
+-- INIT
 
 
 type alias Model =
-    { session : Auth.User
-    , state : State
+    { state : State
     , toCreate : NewUser
     }
 
@@ -47,9 +55,13 @@ type State
     | Errored String
 
 
-init : Auth.User -> ( Model, Cmd Msg )
-init session =
-    ( { session = session, state = Loaded, toCreate = defaultNew }, Cmd.none )
+init : () -> ( Model, Effect Msg )
+init _ =
+    ( { state = Loaded, toCreate = defaultNew }, Effect.none )
+
+
+
+-- UPDATE
 
 
 type Msg
@@ -59,41 +71,57 @@ type Msg
     | Created (Result Http.Error Uuid)
 
 
-update : Request -> Storage -> Msg -> Model -> ( Model, Cmd Msg )
-update req storage msg model =
+update : Auth.User -> Msg -> Model -> ( Model, Effect Msg )
+update user msg model =
     case msg of
         Edit new ->
-            ( { model | toCreate = new }, Cmd.none )
+            ( { model | toCreate = new }, Effect.none )
 
         ClickedCancel ->
-            ( model, Request.pushRoute Route.Users req )
+            ( model
+            , Effect.pushRoute
+                { path = Route.Path.Users
+                , query = Dict.empty
+                , hash = Nothing
+                }
+            )
 
         ClickedSubmit (Ok input) ->
-            createUser model (fromValid input)
+            createUser user model (fromValid input)
 
         ClickedSubmit (Err list) ->
             let
                 toCreate : NewUser -> NewUser
-                toCreate user =
-                    { user | errors = list }
+                toCreate userToCreate =
+                    { userToCreate | errors = list }
             in
-            ( { model | toCreate = toCreate model.toCreate }, Cmd.none )
+            ( { model | toCreate = toCreate model.toCreate }, Effect.none )
 
         Created (Ok _) ->
-            ( model, Request.pushRoute Route.Users req )
+            ( model
+            , Effect.pushRoute
+                { path = Route.Path.Users
+                , query = Dict.empty
+                , hash = Nothing
+                }
+            )
 
         Created (Err err) ->
             if isUnauthenticated err then
-                ( model, Storage.signOut storage )
+                ( model, Effect.signOut )
 
             else
-                ( { model | state = Errored (Problem.toString err) }, Cmd.none )
+                ( { model | state = Errored (Problem.toString err) }, Effect.none )
+
+
+
+-- VIEW
 
 
 view : Shared.Model -> Model -> View Msg
 view shared model =
     { title = newUser shared.translations
-    , body = Layout.layout Route.Users__New shared (viewForm shared model)
+    , elements = viewForm shared model
     }
 
 
@@ -115,9 +143,11 @@ viewForm shared model =
             [ text (onError shared.translations reason) ]
 
 
-createUser : Model -> NewUser -> ( Model, Cmd Msg )
-createUser model user =
-    ( { model | state = Loading }, Api.send Created (createUsers (createUserFrom user) model.session.token) )
+createUser : Auth.User -> Model -> NewUser -> ( Model, Effect Msg )
+createUser user model newUser =
+    ( { model | state = Loading }
+    , Effect.sendCmd (Api.send Created (createUsers (createUserFrom newUser) user.token))
+    )
 
 
 createUserFrom : NewUser -> CreateUser
@@ -127,3 +157,7 @@ createUserFrom model =
     , email = model.email
     , password = model.password
     }
+
+
+
+-- SUBSCRIPTIONS

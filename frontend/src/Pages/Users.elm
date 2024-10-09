@@ -4,43 +4,51 @@ import Api
 import Api.Data exposing (Role(..), UpdateUser, UserResponse)
 import Api.Request.Default exposing (deleteUsers, readAllUsers, updateUsers)
 import Auth
+import Dict
+import Effect exposing (Effect)
 import Element exposing (Element, text)
 import Forms.UserForm exposing (EditUser, editForm, editUserValidator, stringFromRole)
 import Forms.Validators exposing (ValidationField)
-import Gen.Route as Route
 import Http
-import Page
+import Layouts
+import Page exposing (Page)
 import Problem exposing (isUnauthenticated)
-import Request exposing (Request)
+import Route exposing (Route)
+import Route.Path
 import Shared
-import Storage exposing (Storage)
 import Translations.Buttons exposing (delete, edit, newUser)
 import Translations.Labels exposing (loading, onError)
 import Translations.Titles exposing (users)
 import UI.Button exposing (defaultButton)
 import UI.Card exposing (keyedCard)
 import UI.Dialog exposing (defaultDialog)
-import UI.Layout as Layout
 import Uuid exposing (Uuid)
 import Validate exposing (Valid, fromValid, validate)
 import View exposing (View)
 
 
-page : Shared.Model -> Request -> Page.With Model Msg
-page shared req =
-    Page.protected.element
-        (\session ->
-            { init = init session
-            , update = update req shared.storage
-            , view = view shared
-            , subscriptions = \_ -> Sub.none
-            }
-        )
+page : Auth.User -> Shared.Model -> Route () -> Page Model Msg
+page user shared _ =
+    Page.new
+        { init = init user
+        , update = update user
+        , subscriptions = \_ -> Sub.none
+        , view = view shared
+        }
+        |> Page.withLayout (layout shared)
+
+
+layout : Shared.Model -> Model -> Layouts.Layout Msg
+layout shared _ =
+    Layouts.Layout { shared = shared }
+
+
+
+-- INIT
 
 
 type alias Model =
-    { session : Auth.User
-    , state : State
+    { state : State
     , toUpdate : Maybe EditUser
     , toDelete : Maybe Uuid
     }
@@ -52,9 +60,13 @@ type State
     | Errored String
 
 
-init : Auth.User -> ( Model, Cmd Msg )
-init session =
-    loadUsers session
+init : Auth.User -> () -> ( Model, Effect Msg )
+init user _ =
+    loadUsers user
+
+
+
+-- UPDATE
 
 
 type Msg
@@ -70,27 +82,33 @@ type Msg
     | ClickedSubmitDelete
 
 
-update : Request -> Storage -> Msg -> Model -> ( Model, Cmd Msg )
-update req storage msg model =
+update : Auth.User -> Msg -> Model -> ( Model, Effect Msg )
+update user msg model =
     case msg of
         UsersLoaded (Ok list) ->
-            ( { model | state = Loaded list }, Cmd.none )
+            ( { model | state = Loaded list }, Effect.none )
 
         UsersLoaded (Err err) ->
             if isUnauthenticated err then
-                ( model, Storage.signOut storage )
+                ( model, Effect.signOut )
 
             else
-                ( { model | state = Errored (Problem.toString err) }, Cmd.none )
+                ( { model | state = Errored (Problem.toString err) }, Effect.none )
 
         ClickedNew ->
-            ( model, Request.pushRoute Route.Users__New req )
+            ( model
+            , Effect.pushRoute
+                { path = Route.Path.Users_New
+                , query = Dict.empty
+                , hash = Nothing
+                }
+            )
 
-        Edit user ->
-            ( { model | toUpdate = Just user }, Cmd.none )
+        Edit selectedUser ->
+            ( { model | toUpdate = Just selectedUser }, Effect.none )
 
         ClickedCancelEdit ->
-            ( { model | toUpdate = Nothing }, Cmd.none )
+            ( { model | toUpdate = Nothing }, Effect.none )
 
         ClickedSubmitEdit (Ok input) ->
             let
@@ -98,55 +116,59 @@ update req storage msg model =
                 valid =
                     fromValid input
             in
-            updateUser model.session valid.id { name = valid.name, email = valid.email, role = valid.role }
+            updateUser user valid.id { name = valid.name, email = valid.email, role = valid.role }
 
         ClickedSubmitEdit (Err list) ->
             case model.toUpdate of
                 Just some ->
-                    ( { model | toUpdate = Just { some | errors = list } }, Cmd.none )
+                    ( { model | toUpdate = Just { some | errors = list } }, Effect.none )
 
                 _ ->
-                    ( model, Cmd.none )
+                    ( model, Effect.none )
 
         UserUpdated (Ok _) ->
-            loadUsers model.session
+            loadUsers user
 
         UserUpdated (Err err) ->
             if isUnauthenticated err then
-                ( model, Storage.signOut storage )
+                ( model, Effect.signOut )
 
             else
-                ( { model | state = Errored (Problem.toString err) }, Cmd.none )
+                ( { model | state = Errored (Problem.toString err) }, Effect.none )
 
         ClickedDelete uuid ->
-            ( { model | toDelete = Just uuid }, Cmd.none )
+            ( { model | toDelete = Just uuid }, Effect.none )
 
         ClickedCancelDelete ->
-            ( { model | toDelete = Nothing }, Cmd.none )
+            ( { model | toDelete = Nothing }, Effect.none )
 
         ClickedSubmitDelete ->
             case model.toDelete of
                 Just uuid ->
-                    deleteUser model.session uuid
+                    deleteUser user uuid
 
                 Nothing ->
-                    ( model, Cmd.none )
+                    ( model, Effect.none )
 
         UserDeleted (Ok _) ->
-            loadUsers model.session
+            loadUsers user
 
         UserDeleted (Err err) ->
             if isUnauthenticated err then
-                ( model, Storage.signOut storage )
+                ( model, Effect.signOut )
 
             else
-                ( { model | state = Errored (Problem.toString err) }, Cmd.none )
+                ( { model | state = Errored (Problem.toString err) }, Effect.none )
+
+
+
+-- VIEW
 
 
 view : Shared.Model -> Model -> View Msg
 view shared model =
     { title = users shared.translations
-    , body = Layout.layout Route.Users shared (viewUsers shared model)
+    , elements = viewUsers shared model
     }
 
 
@@ -202,24 +224,24 @@ editUser shared user =
     editForm shared.translations user Edit ClickedCancelEdit submit
 
 
-deleteUser : Auth.User -> Uuid -> ( Model, Cmd Msg )
-deleteUser session uuid =
-    ( { session = session, state = Loading, toUpdate = Nothing, toDelete = Nothing }
-    , Api.send UserDeleted (deleteUsers uuid session.token)
+deleteUser : Auth.User -> Uuid -> ( Model, Effect Msg )
+deleteUser user uuid =
+    ( { state = Loading, toUpdate = Nothing, toDelete = Nothing }
+    , Effect.sendCmd (Api.send UserDeleted (deleteUsers uuid user.token))
     )
 
 
-updateUser : Auth.User -> Uuid -> UpdateUser -> ( Model, Cmd Msg )
-updateUser session id user =
-    ( { session = session, state = Loading, toUpdate = Nothing, toDelete = Nothing }
-    , Api.send UserUpdated (updateUsers id user session.token)
+updateUser : Auth.User -> Uuid -> UpdateUser -> ( Model, Effect Msg )
+updateUser user id updatedUser =
+    ( { state = Loading, toUpdate = Nothing, toDelete = Nothing }
+    , Effect.sendCmd (Api.send UserUpdated (updateUsers id updatedUser user.token))
     )
 
 
-loadUsers : Auth.User -> ( Model, Cmd Msg )
-loadUsers session =
-    ( { session = session, state = Loading, toUpdate = Nothing, toDelete = Nothing }
-    , Api.send UsersLoaded (readAllUsers session.token)
+loadUsers : Auth.User -> ( Model, Effect Msg )
+loadUsers user =
+    ( { state = Loading, toUpdate = Nothing, toDelete = Nothing }
+    , Effect.sendCmd (Api.send UsersLoaded (readAllUsers user.token))
     )
 
 

@@ -7,8 +7,7 @@ import Element.Input as Input
 import Html.Events
 import Json.Decode as Decode
 import UI.ColorPalette exposing (black, red)
-import UI.Dimensions exposing (smallScreenWidth)
-import UI.Layout exposing (scaled)
+import UI.Dimensions exposing (scaled, smallScreenWidth)
 
 
 type alias TextField msg =

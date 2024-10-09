@@ -6,21 +6,22 @@ import Api.Request.Default exposing (deleteSnippets, readAllAuthors, readAllTerm
 import Auth
 import Common exposing (uuidFromString)
 import Dict
+import Effect exposing (Effect)
 import Element exposing (Color, Element, height, image, paragraph, px, row, spacing, text, width)
 import Element.Font as Font
 import Embed.Youtube
 import Embed.Youtube.Thumbnail as Thumb
 import Forms.SnippetForm exposing (EditSnippet, editForm, editSnippetValidator, stringFromMedia)
 import Forms.Validators exposing (ValidationField)
-import Gen.Route as Route
 import Http
-import Page
+import Layouts
+import Page exposing (Page)
 import Problem exposing (isUnauthenticated)
-import Request exposing (Request)
+import Route exposing (Route)
+import Route.Path
 import SearchBox exposing (ChangeEvent(..))
 import Set exposing (Set)
 import Shared
-import Storage exposing (Storage)
 import Translations.Buttons exposing (delete, edit, newSnippet, source)
 import Translations.Forms as Forms
 import Translations.Labels exposing (loading, onError, videoThumbnail)
@@ -30,7 +31,6 @@ import UI.Card exposing (keyedCard)
 import UI.ColorPalette exposing (darkGray, green)
 import UI.Dialog exposing (defaultDialog)
 import UI.Dropdown exposing (Dropdown, dropdown, initModel, updateModel)
-import UI.Layout as Layout
 import UI.Link exposing (defaultLink)
 import Url
 import Uuid exposing (Uuid)
@@ -38,16 +38,24 @@ import Validate exposing (Valid, fromValid, validate)
 import View exposing (View)
 
 
-page : Shared.Model -> Request -> Page.With Model Msg
-page shared req =
-    Page.protected.element
-        (\session ->
-            { init = init session req
-            , update = update req shared.storage
-            , view = view shared
-            , subscriptions = \_ -> Sub.none
-            }
-        )
+page : Auth.User -> Shared.Model -> Route () -> Page Model Msg
+page user shared route =
+    Page.new
+        { init = init user route
+        , update = update route
+        , subscriptions = \_ -> Sub.none
+        , view = view shared
+        }
+        |> Page.withLayout (layout shared)
+
+
+layout : Shared.Model -> Model -> Layouts.Layout Msg
+layout shared _ =
+    Layouts.Layout { shared = shared }
+
+
+
+-- INIT
 
 
 type alias Model =
@@ -71,10 +79,10 @@ type State
     | Errored String
 
 
-init : Auth.User -> Request -> ( Model, Cmd Msg )
-init session req =
+init : Auth.User -> Route () -> () -> ( Model, Effect Msg )
+init user route _ =
     loadSnippets
-        { session = session
+        { session = user
         , state = Loading
         , toUpdate = Nothing
         , toDelete = Nothing
@@ -83,8 +91,12 @@ init session req =
         , authorsDropdown = initModel
         , termsDropdown = initModel
         , currentPage = 1
-        , term = Maybe.map2 (\a b -> ( a, b )) (Maybe.andThen (\v -> Uuid.fromString v) (Dict.get "termID" req.query)) (Dict.get "name" req.query)
+        , term = Maybe.map2 (\a b -> ( a, b )) (Maybe.andThen (\v -> Uuid.fromString v) (Dict.get "termID" route.query)) (Dict.get "name" route.query)
         }
+
+
+
+-- UPDATE
 
 
 type Msg
@@ -106,70 +118,87 @@ type Msg
     | ClickedClearTerm
 
 
-update : Request -> Storage -> Msg -> Model -> ( Model, Cmd Msg )
-update req storage msg model =
+update : Route () -> Msg -> Model -> ( Model, Effect Msg )
+update route msg model =
     case msg of
         SnippetsLoaded (Ok result) ->
-            ( { model | state = Loaded result }, Request.pushRoute Route.Snippets req )
+            ( { model | state = Loaded result }
+            , Effect.pushRoute
+                { path = Route.Path.Snippets
+                , query = route.query
+                , hash = Nothing
+                }
+            )
 
         SnippetsLoaded (Err err) ->
             if isUnauthenticated err then
-                ( model, Storage.signOut storage )
+                ( model, Effect.signOut )
 
             else
-                ( { model | state = Errored (Problem.toString err) }, Cmd.none )
+                ( { model | state = Errored (Problem.toString err) }, Effect.none )
 
         ClickedNew ->
-            ( model, Request.pushRoute Route.Snippets__New req )
+            ( model
+            , Effect.pushRoute
+                { path = Route.Path.Snippets_New
+                , query = route.query
+                , hash = Nothing
+                }
+            )
 
         Edit snippet ->
-            ( { model | toUpdate = Just snippet }, Cmd.batch [ Api.send TermsLoaded (readAllTerms model.session.token), Api.send AuthorsLoaded (readAllAuthors model.session.token) ] )
+            ( { model | toUpdate = Just snippet }
+            , Effect.batch
+                [ Effect.sendCmd (Api.send TermsLoaded (readAllTerms model.session.token))
+                , Effect.sendCmd (Api.send AuthorsLoaded (readAllAuthors model.session.token))
+                ]
+            )
 
         TermsLoaded (Ok list) ->
             case model.authors of
                 Just b ->
-                    ( { model | state = LoadedEdit ( list, b ) }, Cmd.none )
+                    ( { model | state = LoadedEdit ( list, b ) }, Effect.none )
 
                 _ ->
-                    ( { model | terms = Just list }, Cmd.none )
+                    ( { model | terms = Just list }, Effect.none )
 
         TermsLoaded (Err err) ->
             if isUnauthenticated err then
-                ( model, Storage.signOut storage )
+                ( model, Effect.signOut )
 
             else
-                ( { model | state = Errored (Problem.toString err) }, Cmd.none )
+                ( { model | state = Errored (Problem.toString err) }, Effect.none )
 
         AuthorsLoaded (Ok list) ->
             case model.terms of
                 Just a ->
-                    ( { model | state = LoadedEdit ( a, list ) }, Cmd.none )
+                    ( { model | state = LoadedEdit ( a, list ) }, Effect.none )
 
                 _ ->
-                    ( { model | authors = Just list }, Cmd.none )
+                    ( { model | authors = Just list }, Effect.none )
 
         AuthorsLoaded (Err err) ->
             if isUnauthenticated err then
-                ( model, Storage.signOut storage )
+                ( model, Effect.signOut )
 
             else
-                ( { model | state = Errored (Problem.toString err) }, Cmd.none )
+                ( { model | state = Errored (Problem.toString err) }, Effect.none )
 
         ChangedAuthorsDropdown changeEvent ->
             case ( model.toUpdate, changeEvent ) of
                 ( Just toUpdate, SelectionChanged sth ) ->
-                    ( { model | authorsDropdown = updateModel changeEvent model.authorsDropdown, toUpdate = Just { toUpdate | authors = Dict.insert (Uuid.toString sth.id) sth.name toUpdate.authors } }, Cmd.none )
+                    ( { model | authorsDropdown = updateModel changeEvent model.authorsDropdown, toUpdate = Just { toUpdate | authors = Dict.insert (Uuid.toString sth.id) sth.name toUpdate.authors } }, Effect.none )
 
                 _ ->
-                    ( { model | authorsDropdown = updateModel changeEvent model.authorsDropdown }, Cmd.none )
+                    ( { model | authorsDropdown = updateModel changeEvent model.authorsDropdown }, Effect.none )
 
         ChangedTermsDropdown changeEvent ->
             case ( model.toUpdate, changeEvent ) of
                 ( Just toUpdate, SelectionChanged sth ) ->
-                    ( { model | termsDropdown = updateModel changeEvent model.termsDropdown, toUpdate = Just { toUpdate | terms = Dict.insert (Uuid.toString sth.id) sth.name toUpdate.terms } }, Cmd.none )
+                    ( { model | termsDropdown = updateModel changeEvent model.termsDropdown, toUpdate = Just { toUpdate | terms = Dict.insert (Uuid.toString sth.id) sth.name toUpdate.terms } }, Effect.none )
 
                 _ ->
-                    ( { model | termsDropdown = updateModel changeEvent model.termsDropdown }, Cmd.none )
+                    ( { model | termsDropdown = updateModel changeEvent model.termsDropdown }, Effect.none )
 
         ClickedCancelEdit ->
             loadSnippets model
@@ -207,26 +236,26 @@ update req storage msg model =
         ClickedSubmitEdit (Err list) ->
             case model.toUpdate of
                 Just some ->
-                    ( { model | toUpdate = Just { some | errors = list } }, Cmd.none )
+                    ( { model | toUpdate = Just { some | errors = list } }, Effect.none )
 
                 _ ->
-                    ( model, Cmd.none )
+                    ( model, Effect.none )
 
         SnippetUpdated (Ok _) ->
             loadSnippets model
 
         SnippetUpdated (Err err) ->
             if isUnauthenticated err then
-                ( model, Storage.signOut storage )
+                ( model, Effect.signOut )
 
             else
-                ( { model | state = Errored (Problem.toString err) }, Cmd.none )
+                ( { model | state = Errored (Problem.toString err) }, Effect.none )
 
         ClickedDelete uuid ->
-            ( { model | toDelete = Just uuid }, Cmd.none )
+            ( { model | toDelete = Just uuid }, Effect.none )
 
         ClickedCancelDelete ->
-            ( { model | toDelete = Nothing }, Cmd.none )
+            ( { model | toDelete = Nothing }, Effect.none )
 
         ClickedSubmitDelete ->
             case model.toDelete of
@@ -234,17 +263,17 @@ update req storage msg model =
                     deleteSnippet model uuid
 
                 Nothing ->
-                    ( model, Cmd.none )
+                    ( model, Effect.none )
 
         SnippetDeleted (Ok _) ->
             loadSnippets model
 
         SnippetDeleted (Err err) ->
             if isUnauthenticated err then
-                ( model, Storage.signOut storage )
+                ( model, Effect.signOut )
 
             else
-                ( { model | state = Errored (Problem.toString err) }, Cmd.none )
+                ( { model | state = Errored (Problem.toString err) }, Effect.none )
 
         ClickedPage i ->
             loadSnippets { model | currentPage = i }
@@ -253,10 +282,14 @@ update req storage msg model =
             loadSnippets { model | term = Nothing }
 
 
+
+-- VIEW
+
+
 view : Shared.Model -> Model -> View Msg
 view shared model =
     { title = snippets shared.translations
-    , body = Layout.layout Route.Snippets shared (viewSnippets shared model)
+    , elements = viewSnippets shared model
     }
 
 
@@ -395,21 +428,25 @@ editSnippet shared snippet model authors terms =
     editForm shared.translations snippet aDropdown tDropdown Edit ClickedCancelEdit submit
 
 
-deleteSnippet : Model -> Uuid -> ( Model, Cmd Msg )
+deleteSnippet : Model -> Uuid -> ( Model, Effect Msg )
 deleteSnippet model uuid =
-    ( { model | state = Loading, toDelete = Nothing }, Api.send SnippetDeleted (deleteSnippets uuid model.session.token) )
-
-
-updateSnippet : Model -> Uuid -> UpdateSnippet -> ( Model, Cmd Msg )
-updateSnippet model id snippet =
-    ( { model | state = Loading, toUpdate = Nothing, authors = Nothing, terms = Nothing, authorsDropdown = initModel, termsDropdown = initModel }
-    , Api.send SnippetUpdated (updateSnippets id snippet model.session.token)
+    ( { model | state = Loading, toDelete = Nothing }
+    , Effect.sendCmd (Api.send SnippetDeleted (deleteSnippets uuid model.session.token))
     )
 
 
-loadSnippets : Model -> ( Model, Cmd Msg )
+updateSnippet : Model -> Uuid -> UpdateSnippet -> ( Model, Effect Msg )
+updateSnippet model id snippet =
+    ( { model | state = Loading, toUpdate = Nothing, authors = Nothing, terms = Nothing, authorsDropdown = initModel, termsDropdown = initModel }
+    , Effect.sendCmd (Api.send SnippetUpdated (updateSnippets id snippet model.session.token))
+    )
+
+
+loadSnippets : Model -> ( Model, Effect Msg )
 loadSnippets model =
-    ( { model | state = Loading }, Api.send SnippetsLoaded (searchSnippets model.currentPage (Maybe.map (\( v, _ ) -> v) model.term) model.session.token) )
+    ( { model | state = Loading }
+    , Effect.sendCmd (Api.send SnippetsLoaded (searchSnippets model.currentPage (Maybe.map (\( v, _ ) -> v) model.term) model.session.token))
+    )
 
 
 editSnippetFromSnippet : SnippetResponse -> EditSnippet
@@ -438,3 +475,7 @@ editSnippetFromSnippet model =
     , terms = List.foldl (\v dict -> Dict.insert (Uuid.toString v.id) v.name dict) Dict.empty model.terms
     , errors = []
     }
+
+
+
+-- SUBSCRIPTIONS

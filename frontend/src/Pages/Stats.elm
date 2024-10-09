@@ -4,17 +4,17 @@ import Api
 import Api.Data exposing (MediaStatsResponse, StatsResponse)
 import Api.Request.Default exposing (snippetsStatsGet)
 import Auth
+import Effect exposing (Effect)
 import Element exposing (Element, text)
 import Forms.SnippetForm exposing (stringFromMedia)
-import Gen.Route as Route
 import Http
-import Page
+import Layouts
+import Page exposing (Page)
 import Path
 import Problem exposing (isUnauthenticated)
-import Request exposing (Request)
+import Route exposing (Route)
 import Shape exposing (defaultPieConfig)
 import Shared
-import Storage exposing (Storage)
 import Translations.Labels exposing (loading, onError)
 import Translations.Titles exposing (stats)
 import TypedSvg
@@ -24,21 +24,28 @@ import TypedSvg.Attributes.InPx
 import TypedSvg.Core
 import TypedSvg.Types
 import UI.ColorPalette exposing (colorFromScale)
-import UI.Dimensions exposing (bodyHeight, bodyWidth)
-import UI.Layout as Layout exposing (scaled)
+import UI.Dimensions exposing (bodyHeight, bodyWidth, scaled)
 import View exposing (View)
 
 
-page : Shared.Model -> Request -> Page.With Model Msg
-page shared _ =
-    Page.protected.element
-        (\session ->
-            { init = init session
-            , update = update shared.storage
-            , view = view shared
-            , subscriptions = \_ -> Sub.none
-            }
-        )
+page : Auth.User -> Shared.Model -> Route () -> Page Model Msg
+page user shared _ =
+    Page.new
+        { init = init user
+        , update = update
+        , subscriptions = \_ -> Sub.none
+        , view = view shared
+        }
+        |> Page.withLayout (layout shared)
+
+
+layout : Shared.Model -> Model -> Layouts.Layout Msg
+layout shared _ =
+    Layouts.Layout { shared = shared }
+
+
+
+-- INIT
 
 
 type alias Model =
@@ -52,33 +59,41 @@ type State
     | Errored String
 
 
-init : Auth.User -> ( Model, Cmd Msg )
-init session =
-    loadStats session
+init : Auth.User -> () -> ( Model, Effect Msg )
+init user _ =
+    loadStats user
+
+
+
+-- UPDATE
 
 
 type Msg
     = StatsLoaded (Result Http.Error StatsResponse)
 
 
-update : Storage -> Msg -> Model -> ( Model, Cmd Msg )
-update storage msg model =
+update : Msg -> Model -> ( Model, Effect Msg )
+update msg model =
     case msg of
         StatsLoaded (Ok response) ->
-            ( { model | state = Loaded response }, Cmd.none )
+            ( { model | state = Loaded response }, Effect.none )
 
         StatsLoaded (Err err) ->
             if isUnauthenticated err then
-                ( model, Storage.signOut storage )
+                ( model, Effect.signOut )
 
             else
-                ( { model | state = Errored (Problem.toString err) }, Cmd.none )
+                ( { model | state = Errored (Problem.toString err) }, Effect.none )
+
+
+
+-- VIEW
 
 
 view : Shared.Model -> Model -> View Msg
 view shared model =
     { title = stats shared.translations
-    , body = Layout.layout Route.Stats shared (viewStats shared model)
+    , elements = viewStats shared model
     }
 
 
@@ -157,6 +172,10 @@ pieChart shared media =
         )
 
 
-loadStats : Auth.User -> ( Model, Cmd Msg )
+loadStats : Auth.User -> ( Model, Effect Msg )
 loadStats session =
-    ( { state = Loading }, Api.send StatsLoaded (snippetsStatsGet session.token) )
+    ( { state = Loading }, Effect.sendCmd (Api.send StatsLoaded (snippetsStatsGet session.token)) )
+
+
+
+-- SUBSCRIPTIONS

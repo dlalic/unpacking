@@ -1,12 +1,11 @@
 {
   "scripts": {
-    "dev": "./node_modules/.bin/elm-spa server",
-    "gen": "./node_modules/.bin/elm-spa gen",
-    "prod": "./node_modules/.bin/elm-spa build || true",
+    "dev": "./node_modules/.bin/elm-land server",
+    "prod": "./node_modules/.bin/elm-land build",
     "format": "./node_modules/.bin/elm-format src/ --yes",
     "check_format": "./node_modules/.bin/elm-format src/ --validate",
-    "check_lint": "./node_modules/.bin/elm-review --ignore-dirs client,.elm-spa,src/Translations",
-    "fix": "./node_modules/.bin/elm-review --ignore-dirs client,.elm-spa,src/Translations --fix-all",
+    "check_lint": "./node_modules/.bin/elm-review --ignore-dirs client,.elm-land,src/Translations,src/Layouts --ignore-files src/Shared.elm,src/Effect.elm",
+    "fix": "./node_modules/.bin/elm-review --ignore-dirs client,.elm-land,src/Translations,src/Layouts --ignore-files src/Shared.elm,src/Effect.elm --fix-all",
     "test": "./node_modules/.bin/elm-test",
     "i18n": "./node_modules/.bin/elm-i18next-gen --source translations/translations.en.json --target src --overwrite",
     "check_i18n": "./node_modules/.bin/elm-review --template dlalic/elm-review-i18n/preview"

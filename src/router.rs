@@ -3,7 +3,7 @@ use crate::resources;
 use crate::resources::auth::AuthData;
 
 use diesel::PgConnection;
-use gotham::hyper::header::CONTENT_TYPE;
+use gotham::hyper::header::{AUTHORIZATION, CONTENT_TYPE};
 use gotham::hyper::Method;
 use gotham::router::builder::{self, DefineSingleRoute, DrawRoutes};
 use gotham::router::Router;
@@ -40,7 +40,7 @@ fn api_router(repo: Repo) -> Router {
             .add(RequestLogger::new(log::Level::Info))
             .add(CorsConfig {
                 origin: cors_origin(),
-                headers: Headers::List(vec![CONTENT_TYPE]),
+                headers: Headers::List(vec![CONTENT_TYPE, AUTHORIZATION]),
                 max_age: 86400,
                 credentials: false,
             })
@@ -68,9 +68,11 @@ fn api_router(repo: Repo) -> Router {
         for method in [Method::GET, Method::POST, Method::PUT, Method::DELETE] {
             route.cors("/users", method.clone());
             route.cors("/terms", method.clone());
+            route.cors("/terms/graph", method.clone());
             route.cors("/snippets", method.clone());
+            route.cors("/snippets/search", method.clone());
+            route.cors("/snippets/stats", method.clone());
             route.cors("/authors", method.clone());
-            route.cors("/transactions", method.clone());
             route.cors("/translations", method.clone());
         }
     })
@@ -80,11 +82,10 @@ pub fn router(repo: Repo) -> Router {
     builder::build_simple_router(|route| {
         route.delegate(API_URL).to_router(api_router(repo.clone()));
 
-        route.get("/").to_file("frontend/public/index.html");
-        route.get("/*").to_file("frontend/public/index.html");
+        route.get("/").to_file("frontend/dist/index.html");
         route
-            .get("dist/elm.js")
-            .to_file(file_options("frontend/public/dist/elm.js"));
+            .get("/styles.css")
+            .to_file(file_options("frontend/public/styles.css"));
         route
             .get("/PublicSans-Regular.woff2")
             .to_file(file_options("frontend/public/PublicSans-Regular.woff2"));
@@ -94,6 +95,7 @@ pub fn router(repo: Repo) -> Router {
         route
             .get("/Redaction-Regular.woff2")
             .to_file(file_options("frontend/public/Redaction-Regular.woff2"));
+        route.get("/*").to_dir(file_options("frontend/dist"));
     })
 }
 

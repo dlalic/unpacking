@@ -3,31 +3,31 @@ module UI.Header exposing (HeaderButton, Home, header)
 import Element exposing (Element, alignRight, fill, height, link, padding, row, text, width)
 import Element.Border as Border
 import Element.Font as Font
-import Gen.Route as Route exposing (Route)
+import Route.Path
 import UI.ColorPalette exposing (darkGray)
 import UI.Dimensions exposing (defaultPadding, headerHeightInPx)
 
 
 type alias Home =
     { title : String
-    , route : Route
+    , route : Route.Path.Path
     }
 
 
 type alias HeaderButton =
     { title : String
-    , route : Route
+    , route : Route.Path.Path
     }
 
 
-homeLink : Route -> String -> Element msg
+homeLink : Route.Path.Path -> String -> Element msg
 homeLink route title =
-    link [ Font.bold ] { url = Route.toHref route, label = text title }
+    link [ Font.bold ] { url = Route.Path.toString route, label = text title }
 
 
-buttonLink : Route -> String -> Element msg
+buttonLink : Route.Path.Path -> String -> Element msg
 buttonLink route title =
-    link [ alignRight, Font.size 18, Font.color darkGray ] { url = Route.toHref route, label = text title }
+    link [ alignRight, Font.size 18, Font.color darkGray ] { url = Route.Path.toString route, label = text title }
 
 
 header : Home -> Maybe HeaderButton -> Element msg

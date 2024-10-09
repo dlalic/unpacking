@@ -5,7 +5,7 @@ import Element.Font as Font
 import Element.Input exposing (labelAbove)
 import SearchBox exposing (ChangeEvent)
 import UI.ColorPalette exposing (red)
-import UI.Layout exposing (scaled)
+import UI.Dimensions exposing (scaled)
 
 
 type alias Dropdown =

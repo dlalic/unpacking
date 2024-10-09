@@ -3,8 +3,7 @@
     "source-directories": [
         "src",
         "client/src",
-        ".elm-spa/defaults",
-        ".elm-spa/generated"
+        ".elm-land/src"
     ],
     "elm-version": "0.19.1",
     "dependencies": {
@@ -29,8 +28,7 @@
             "mdgriffith/elm-ui": "1.1.8",
             "rtfeldman/elm-iso8601-date-strings": "1.1.4",
             "rtfeldman/elm-validate": "4.0.2",
-            "russelldavies/elm-ui-searchbox": "1.1.1",
-            "ryannhg/elm-spa": "6.0.0"
+            "russelldavies/elm-ui-searchbox": "1.1.1"
         },
         "indirect": {
             "avh4/elm-fifo": "1.0.4",

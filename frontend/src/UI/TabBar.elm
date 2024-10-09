@@ -3,7 +3,7 @@ module UI.TabBar exposing (TabBar, tabBar)
 import Element exposing (Attribute, Element, column, fill, height, htmlAttribute, link, mouseOver, moveUp, padding, row, spacing, text, width)
 import Element.Border as Border
 import Element.Font as Font
-import Gen.Route as Route exposing (Route)
+import Route.Path
 import Simple.Transition as Transition
 import UI.Dimensions exposing (defaultPadding, defaultSpacing, headerHeightInPx, smallScreenWidth)
 
@@ -11,7 +11,7 @@ import UI.Dimensions exposing (defaultPadding, defaultSpacing, headerHeightInPx,
 type alias TabBar =
     { title : String
     , selected : Bool
-    , route : Route
+    , route : Route.Path.Path
     }
 
 
@@ -54,7 +54,7 @@ tabBarButton size model =
             [ moveUp 2
             ]
         ]
-        { url = Route.toHref model.route
+        { url = Route.Path.toString model.route
         , label = text model.title
         }
 
