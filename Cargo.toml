@@ -38,7 +38,7 @@ validator = { version = "0.16.0", features = ["derive"] }
 async-trait = "0.1.83"
 cucumber = { version = "0.21.1", features = ["output-junit"] }
 fake = { version = "2.10.0", features = ["derive", "uuid", "chrono"] }
-image = { version = "0.25.2", features = ["png"] }
+image = { version = "0.25.4", features = ["png"] }
 mime = "0.3.17"
 openapi = { path = "./tests/client" }
 pixelmatch = "0.1.0"
