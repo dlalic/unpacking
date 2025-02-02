@@ -27,7 +27,7 @@ openapi_type = { version = "0.5.0", features = ["chrono", "uuid"] }
 r2d2 = "0.8.10"
 r2d2-diesel = "1.0.0"
 serde = "1.0.217"
-serde_json = "1.0.134"
+serde_json = "1.0.138"
 serde_derive = "1.0.210"
 tokio = "1.43.0"
 url = "2.5.4"
@@ -50,6 +50,6 @@ thirtyfour = { version = "0.35.0"}
 [build-dependencies]
 serde = "1.0.217"
 serde_derive = "1.0.210"
-serde_json = "1.0.134"
+serde_json = "1.0.138"
 json_typegen_shared = { version = "0.7.0", default-features = false, features = ["local-samples"] }
 
