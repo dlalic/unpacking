@@ -35,7 +35,7 @@ uuid = { version = "1.10.0", features = ["serde", "v4", "fast-rng", "macro-diagn
 validator = { version = "0.16.0", features = ["derive"] }
 
 [dev-dependencies]
-async-trait = "0.1.86"
+async-trait = "0.1.88"
 cucumber = { version = "0.21.1", features = ["output-junit"] }
 fake = { version = "4.2.0", features = ["derive", "uuid", "chrono"] }
 image = { version = "0.25.6", features = ["png"] }
