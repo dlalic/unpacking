@@ -778,9 +778,9 @@ dependencies = [
 
 [[package]]
 name = "diesel"
-version = "2.2.8"
+version = "2.2.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "470eb10efc8646313634c99bb1593f402a6434cbd86e266770c6e39219adb86a"
+checksum = "a917a9209950404d5be011c81d081a2692a822f73c3d6af586f0cab5ff50f614"
 dependencies = [
  "bitflags 2.6.0",
  "byteorder",
@@ -834,7 +834,7 @@ version = "2.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8a73ce704bad4231f001bff3314d91dce4aba0770cee8b233991859abc15c1f6"
 dependencies = [
- "diesel 2.2.8",
+ "diesel 2.2.11",
  "migrations_internals",
  "migrations_macros",
 ]
@@ -1317,7 +1317,7 @@ version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7c1cd0720595239590dceb214fe42e39dd9697a10535ce72ed1896c3bc3dd317"
 dependencies = [
- "diesel 2.2.8",
+ "diesel 2.2.11",
  "futures-util",
  "gotham",
  "log",
@@ -4198,7 +4198,7 @@ dependencies = [
  "cron",
  "cucumber",
  "derive-getters 0.5.0",
- "diesel 2.2.8",
+ "diesel 2.2.11",
  "diesel-derive-enum",
  "diesel_migrations",
  "dotenv",
