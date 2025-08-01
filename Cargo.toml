@@ -9,7 +9,7 @@ argon2 = "0.5.3"
 chrono = { version = "0.4.41", features = ["serde"] }
 cron = "0.15.0"
 derive-getters = "0.5.0"
-diesel = { version = "2.2.11", features = ["postgres", "chrono", "uuid", "r2d2"] }
+diesel = { version = "2.2.12", features = ["postgres", "chrono", "uuid", "r2d2"] }
 diesel-derive-enum = { version = "2.1.0", features = ["postgres"] }
 diesel_migrations = "2.2.0"
 dotenv = "0.15.0"
